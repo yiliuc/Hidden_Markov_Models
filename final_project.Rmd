@@ -1,7 +1,6 @@
 ---
 title: "Hidden Markov Models for Time Series Analysis"
 author: "Yiliu Cao"
-date: "2025-03-25"
 output:
   pdf_document:
     number_sections: true
@@ -11,7 +10,7 @@ header-includes:
   - \usepackage{tikz}
   - \usetikzlibrary{arrows,shapes,positioning}
   - \tikzset{node font = \large\bfseries\sffamily, 
-             every node/.append style = {circle, minimum size = 12mm, thick},
+             every node/.append style = {circle, minimum size = 13mm, thick},
              every edge/.append style = {->, very thick, shorten >= 1pt, shorten <= 1pt}}
 bibliography: references.bib
 csl: apa.csl
@@ -351,7 +350,6 @@ It is easy to performing HMMs in R. Although we can still write the recursive fu
 ```{r, echo=FALSE}
 n <- nrow(bicycle_data)
 x <- bicycle_data$count
-plot(c(1:n), bicycle_data$count, type = "l")
 ```
 
 
@@ -360,7 +358,7 @@ plot(c(1:n), bicycle_data$count, type = "l")
 library(HiddenMarkov)
 
 ################################################################################
-# # Number of states
+# # # Number of states
 # nstates <- 2
 # 
 # # Transition matrix (same as before)
@@ -372,7 +370,6 @@ library(HiddenMarkov)
 # 
 # # Poisson emission parameters (lambda values for each state)
 # lambda <- c(110, 350)
-
 ################################################################################
 # Number of states
 nstates <- 3
@@ -387,14 +384,91 @@ delta <- rep(1 / nstates, nstates)
 
 # Poisson emission parameters (lambda values for each state)
 lambda <- c(100, 300, 500)
+################################################################################
+# Number of states
+nstates <- 4
 
+# Transition matrix (same as before)
+Pi <- matrix(c(0.4, 0.3, 0.2, 0.1,
+               0.2, 0.2, 0.4, 0.2,
+               0.4, 0.1, 0.2, 0.3,
+               0.7, 0.1, 0.1, 0.1), nrow = nstates, byrow = TRUE)
 
+# Initial state distribution
+delta <- rep(1 / nstates, nstates)
+
+# Poisson emission parameters (lambda values for each state)
+lambda <- c(100, 250, 400, 550)
+################################################################################
+# # Number of states
+# nstates <- 5
+# 
+# # Transition matrix (same as before)
+# Pi <- matrix(c(0.3, 0.3, 0.2, 0.1, 0.1,
+#                0.1, 0.1, 0.4, 0.2, 0.2,
+#                0.4, 0.1, 0.2, 0.2, 0.1, 
+#                0.5, 0.1, 0.1, 0.1, 0.2,
+#                0.5, 0.1, 0.1, 0.1, 0.2), nrow = nstates, byrow = TRUE)
+# 
+# # Initial state distribution
+# delta <- rep(1 / nstates, nstates)
+# 
+# # Poisson emission parameters (lambda values for each state)
+# lambda <- c(100, 200, 300, 400, 500)
+################################################################################
+# # Number of states
+# nstates <- 6
+# 
+# # Transition matrix (6x6): each row should sum to 1
+# Pi <- matrix(c(
+#   0.2, 0.2, 0.2, 0.2, 0.1, 0.1,
+#   0.1, 0.2, 0.3, 0.2, 0.1, 0.1,
+#   0.2, 0.1, 0.3, 0.2, 0.1, 0.1,
+#   0.3, 0.1, 0.1, 0.3, 0.1, 0.1,
+#   0.3, 0.1, 0.1, 0.1, 0.3, 0.1,
+#   0.3, 0.1, 0.1, 0.1, 0.1, 0.3
+# ), nrow = nstates, byrow = TRUE)
+# 
+# # Initial state distribution (uniform)
+# delta <- rep(1 / nstates, nstates)
+# 
+# # Poisson emission rates (lambdas for each state)
+# lambda <- c(100, 180, 260, 340, 420, 500)
+################################################################################
 # Create the HMM with Poisson emissions
 model <- dthmm(bicycle_data$count, Pi = Pi, delta = delta, distn = "pois",
                pm = list(lambda = lambda))
 
 fitted_model_bicycle <- BaumWelch(model)
 summary(fitted_model_bicycle)
+```
+
+```{r, echo=FALSE}
+library(knitr)
+
+# Raw model values
+states <- 2:6
+aic <- c(4196.517, 2685.328, 2172.677, 1993.804, 1753.180)
+bic <- c(4210.931, 2717.039, 2227.450, 2077.405, 1871.375)
+iterations <- c(7, 9, 15, 36, 30)
+
+# Compute number of parameters: k = m^2 + m - 1
+num_params <- states^2 + states - 1
+
+# Compute log-likelihood: logLik = -0.5 * (AIC - 2k)
+loglik <- -0.5 * (aic - 2 * num_params)
+
+# Create summary data frame
+model_table <- data.frame(
+  States = states,
+  AIC = round(aic, 3),
+  BIC = round(bic, 3),
+  LogLikelihood = round(loglik, 3),
+  Parameters = num_params,
+  Iterations = iterations)
+
+# Print kable table
+kable(model_table, caption = "Poisson HMM Model Comparison (Non-Stationary)")
 ```
 
 ```{r, echo = FALSE, fig.width = 8, fig.height = 5, fig.cap = "Local decoding (top) and glocal decoding (bottom) for the number of monthly bicycle thefts at Toronto since 2014 (3 hidden states)"}
@@ -440,7 +514,7 @@ abline(h = mod_new$lambda, col = "grey", lty = 2)
 ```{r, echo=FALSE, fig.cap = "Forecasted distribution of monthly bicycle theft counts in Toronto for the next nine months"}
 xf <- 0:500  # finer grid
 
-m <- 3
+m <- nstates
 lambda <- mod_new$lambda
 delta <- solve(t(diag(m) - mod_new$gamma + 1), rep(1, m))
 dstat <- numeric(length(xf))
@@ -473,39 +547,79 @@ for (i in 1:h) {
 ```
 
 ```{r, echo=FALSE}
-states_prediction <- pois.HMM.state_prediction(h = 10, x, mod_new)
-states_prediction
+# Confidence interval
+h <- 6
+xf <- 0:500
+forecasts <- pois.HMM.forecast(xf, h, x, mod_new)
+# Setup
+dx <- diff(xf)[1]  # grid spacing
+H <- h             # total forecast steps
+results <- data.frame(
+  step = 1:H,
+  mean = NA,
+  lower_95 = NA,
+  upper_95 = NA
+)
+
+# Loop over all forecast steps
+for (i in 1:H) {
+  fc <- forecasts[i, ]
+  fc <- fc / sum(fc * dx)  # normalize
+  
+  # Mean
+  mu <- sum(xf * fc * dx)
+  
+  # CDF and quantile function
+  cdf <- cumsum(fc * dx)
+  qfun <- approxfun(cdf, xf)
+  
+  # 95% confidence interval
+  lwr <- qfun(0.025)
+  upr <- qfun(0.975)
+  
+  # Store results
+  results$mean[i] <- mu
+  results$lower_95[i] <- lwr
+  results$upper_95[i] <- upr
+}
+
+states_prediction <- pois.HMM.state_prediction(h = 6, x, mod_new)
+
+library(knitr)
+library(dplyr)
+
+# Assume `results` and `states_prediction` are already defined in your environment
+
+# Format mean + CI
+summary_col <- with(results, sprintf("%.2f (%.2f, %.2f)", mean, lower_95, upper_95))
+
+# Transpose state prediction matrix for day-wise alignment
+state_probs <- t(states_prediction)
+
+# Format state probability row: "S1: 0.76, S2: 0.67, ..."
+state_col <- apply(state_probs, 1, function(p) {
+  paste0("S", 1:4, ": ", sprintf("%.2f", p), collapse = ", ")
+})
+
+# Combine into final summary table
+summary_table <- data.frame(
+  Day = 1:nrow(results),
+  Forecast = summary_col,
+  State_Probabilities = state_col
+)
+
+# Output with kable
+kable(summary_table, caption = "5-Day Forecast Summary with State Probabilities")
 ```
 
 ## NVIDIA stock price
 
 The previous simulation example illustrate that the perform well. To further illustrate its performance, let us apply it to the NVIDIA stock price. The data used here is through the R package `quantmod` to access the NVIDIA stock price from January 2nd, 2024 to April 8th, 2025. The goal of this study is to use HMM to estimate the volatility level behind each price and assumed hidden. The volatility level here is calculated by absolute log returns. We divide the volatility levels into three states: low, medium and high, and the emission distribution of volatility is assumed to follow a normal distribution.
 
-```{r, echo = FALSE, warning = FALSE, fig.cap = "The absolute log return (top), ACF plot (bottom left) and PACF (bottom right)"}
+```{r, echo = FALSE}
 x <- na.omit(abs(diff(log(nvda_vec))))
 # x <- na.omit(diff(nvda_vec))
 n <- length(x)
-
-library(ggplot2)
-library(patchwork)
-library(forecast)
-
-x <- na.omit(abs(diff(log(nvda_vec))))
-ts_plot <- autoplot(ts(x)) +
-  labs(x = "Time", y = "Abs. Log Return") +
-  ggtitle("")
-
-# ACF plot with custom labels and no title
-acf_plot <- ggAcf(x) +
-  labs(x = "Lag", y = "ACF") +
-  ggtitle("")
-
-# PACF plot with custom labels and no title
-pacf_plot <- ggPacf(x) +
-  labs(x = "Lag", y = "PACF") +
-  ggtitle("")
-
-(ts_plot / (acf_plot | pacf_plot))  # patchwork layout
 ```
 
 Descriptions here.
@@ -515,33 +629,51 @@ library(HiddenMarkov)
 
 ################################################################################
 # Number of states
-nstates <- 3
+nstates <- 2
 
 # Initialize the transition probabilities
-Pi <- matrix(c(0.8, 0.1, 0.1,
-               0.1, 0.8, 0.1,
-               0.1, 0.1, 0.8), nrow=nstates, byrow=TRUE)
+Pi <- matrix(c(0.6, 0.4,
+               0.4, 0.6), nrow=nstates, byrow=TRUE)
 
 # Initialize the initial distribution
 delta <- rep(1/nstates, nstates)
 
 # Initial emission parameters
-mu <- c(0.01, 0.05, 0.09)
-sigma <- c(0.02, 0.02, 0.02)
+mu <- c(0.02, 0.06)
+sigma <- c(0.02, 0.02)
 ################################################################################
 # # Number of states
-# nstates <- 2
+# nstates <- 3
 # 
 # # Initialize the transition probabilities
-# Pi <- matrix(c(0.6, 0.4,
-#                0.4, 0.6), nrow=nstates, byrow=TRUE)
+# Pi <- matrix(c(0.8, 0.1, 0.1,
+#                0.1, 0.8, 0.1,
+#                0.1, 0.1, 0.8), nrow=nstates, byrow=TRUE)
 # 
 # # Initialize the initial distribution
 # delta <- rep(1/nstates, nstates)
 # 
 # # Initial emission parameters
-# mu <- c(0.02, 0.06)
-# sigma <- c(0.02, 0.02)
+# mu <- c(0.01, 0.05, 0.09)
+# sigma <- c(0.02, 0.02, 0.02)
+################################################################################
+# # Number of states
+# nstates <- 4
+# 
+# # Transition matrix: more persistence on diagonals
+# Pi <- matrix(c(
+#   0.7, 0.1, 0.1, 0.1,
+#   0.1, 0.7, 0.1, 0.1,
+#   0.1, 0.1, 0.7, 0.1,
+#   0.1, 0.1, 0.1, 0.7
+# ), nrow = nstates, byrow = TRUE)
+# 
+# # Initial state distribution: uniform
+# delta <- rep(1 / nstates, nstates)
+# 
+# # Emission parameters (mean and std dev for each state)
+# mu <- c(0.01, 0.03, 0.06, 0.10)      # increasing means (e.g., upward volatility)
+# sigma <- c(0.01, 0.02, 0.02, 0.03)   # slightly increasing spread
 ################################################################################
 model <- dthmm(x, Pi=Pi, delta=delta, distn="norm",
                pm=list(mean=mu, sd=sigma))
@@ -549,20 +681,50 @@ fitted_model_gaussian <- BaumWelch(model)
 summary(fitted_model_gaussian)
 ```
 
-By performing the EM Algorithm, the estimated initial distribution $\boldsymbol\delta=(1, 0, 0)$, and the estimated transition matrix is
+```{r, echo=FALSE}
+library(knitr)
+
+# Input data
+states <- 2:4
+aic <- c(-1583.11, -1616.91, -1622.727)
+bic <- c(-1556.797, -1564.285, -1536.272)
+iterations <- c(34, 247, 220)
+
+# Number of parameters: k = m^2 + 2m - 1
+num_params <- states^2 + 2 * states - 1
+
+# Log-likelihood: logLik = -0.5 * (AIC - 2k)
+loglik <- -0.5 * (aic - 2 * num_params)
+
+# Create data frame
+gaussian_table <- data.frame(
+  States = states,
+  AIC = round(aic, 3),
+  BIC = round(bic, 3),
+  LogLikelihood = round(loglik, 3),
+  Parameters = num_params,
+  Iterations = iterations)
+
+# Display table
+kable(gaussian_table, caption = "Gaussian HMM Model Comparison (Non-Stationary)")
+
+```
+
+
+The above table shows the model diagonistics for different states, we can see that the two states is enough.
+
+By performing the EM Algorithm with two states, the estimated initial distribution $\boldsymbol\delta=(1, 0)$, and the estimated transition matrix is
 $$
 \hat{\boldsymbol\Gamma} =
 \begin{pmatrix}
-0.254 & 0.678 & 0.068 \\
-0.264 & 0.558 & 0.178 \\
-0.157 & 0.613 & 0.23
+0.84 & 0.16 \\
+0.738 & 0.262\\
 \end{pmatrix}
 $$
 
-The estimated parameters are $\mu_1=0.006,\sigma_1=0.004$, $\mu_2=0.025,\sigma_2=0.012$ and $\mu_3=0.062,\sigma_3=0.033$.
+The estimated parameters are $\mu_1=0.019,\sigma_1=0.013$ and $\mu_2=0.059,\sigma_2=0.033$.
 
 ```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.cap = "Local decoding (top) and glocal decoding (bottom) for the volatility of NVIDIA stock (the most recent 150 observations due to visualbility) (3 hidden states)", fig.width = 8, fig.height = 5}
-
 mod_new <- convert.HiddenMarkov.output(fitted_model_gaussian, x = x)
 state_probs <- normal.HMM.state_probs(x, mod_new)
 
@@ -580,7 +742,7 @@ plot(1:150, tail(x, 150),
      ylab = "", xlab = "", main = "Local Decoding")
 
 # Overlay the expected lambda values per decoded state
-points(1:150, tail(decoded_means, 150), pch = 19, cex = 0.2)
+points(1:150, tail(decoded_means, 150), pch = 19, cex = 0.3)
 
 # Optionally, add horizontal reference lines
 abline(h = mod_new$mean, col = "black", lty = 2, lwd = 0.5)
@@ -597,7 +759,7 @@ plot(1:150, tail(x, 150),
      ylab = "", xlab = "Time", main = "Global Decoding")
 
 # Overlay the expected lambda values per decoded state
-points(1:150, tail(decoded_means, 150), pch = 19, cex = 0.2)
+points(1:150, tail(decoded_means, 150), pch = 19, cex = 0.3)
 
 # Optionally, add horizontal reference lines
 abline(h = mod_new$mean, col = "black", lty = 2, lwd = 0.5)
@@ -608,7 +770,7 @@ Figure 5 shows the estimated hidden states for each time point on NVIDIA stock p
 ```{r, echo=FALSE, fig.cap = "Forecasted distribution of daily volatility (by absolute log returns) of NVIDIA stock for the next nine days"}
 xf <- seq(0, 0.2, length.out = 1000)   # finer grid
 
-m <- 3
+m <- nstates
 mean <- mod_new$mean
 sd <- mod_new$sd
 delta <- solve(t(diag(m) - mod_new$gamma + 1), rep(1, m))
@@ -644,7 +806,7 @@ for (i in 1:h) {
 
 ```{r, echo = FALSE}
 # Confidence interval
-h <- 4
+h <- 6
 xf <- seq(0, 0.2, length.out = 1000)  # finer grid
 forecasts <- normal.HMM.forecast(xf, h, x, mod_new)
 # Setup
@@ -678,18 +840,36 @@ for (i in 1:H) {
   results$lower_95[i] <- lwr
   results$upper_95[i] <- upr
 }
+states_prediction <- normal.HMM.state_prediction(h = 6, x, mod_new)
+library(knitr)
+library(dplyr)
 
-# Display the result
-print(results)
+# Assume `results` and `states_prediction` are already defined in your environment
+
+# Format mean + CI
+summary_col <- with(results, sprintf("%.2f (%.2f, %.2f)", mean, lower_95, upper_95))
+
+# Transpose state prediction matrix for day-wise alignment
+state_probs <- t(states_prediction)
+
+# Format state probability row: "S1: 0.76, S2: 0.67, ..."
+state_col <- apply(state_probs, 1, function(p) {
+  paste0("S", 1:2, ": ", sprintf("%.2f", p), collapse = ", ")
+})
+
+# Combine into final summary table
+summary_table <- data.frame(
+  Day = 1:nrow(results),
+  Forecast = summary_col,
+  State_Probabilities = state_col
+)
+
+# Output with kable
+kable(summary_table, caption = "5-Day Forecast Summary with State Probabilities")
 ```
 
-```{r, echo = FALSE}
-states_prediction <- normal.HMM.state_prediction(h = 10, x, mod_new)
-states_prediction
-```
 
-
-## HMM_GARCH
+# HMM_GARCH
 
 ```{r, echo=FALSE}
 # library(MSGARCH)
