@@ -4,7 +4,7 @@ author: "Yiliu Cao"
 output:
   pdf_document:
     number_sections: true
-#thanks: "The codes can be found in sss" 
+thanks: "All codes and analyses can be found at: https://github.com/yiliuc/Hidden_Markov_Models"
 fontsize: 11pt
 header-includes:
   - \usepackage{tikz}
@@ -17,7 +17,6 @@ csl: apa.csl
 ---
 ```{r, include=FALSE, results='hide', message=FALSE}
 library(tidyverse)
-# source("codes/overall.R")
 source("codes/functions.R")
 source("codes/book.R")
 source("codes/data.R")
@@ -27,20 +26,21 @@ source("codes/data.R")
 
 # Introduction
 
-In probability theory and statistics, a Markov Chain is a stochastic process that models a sequence of random variables in which the distribution of the next state depends only on the current state or a limited number of past observations, and we call this structure a Markov process. This model was first introduced by Andrey Markov in the early 20th century [@markov]. Building on this idea, Leonard E. Baum introduced the Hidden Markov Model (HMM), which extends the Markov chain framework by having two sequences of random variables, one to be hidden and another to be observed, with hidden variables modeling as the Markov process[@baum1]. The distribution of the hidden variable at time $t$ only depends on the hidden variable at time $t-1$, with an observed variable that depends on the hidden variable at the same time $t$. Since the hidden states can not be observed directly, the study of HMMs mainly focuses on two key tasks. Firstly, we want to compute the most likely sequence of hidden states given the observed data. Secondly, we want to estimate the parameters from the HMMs, such as transition distribution. This paper will discuss how to achieve the two goals and illustrate the relationship to the Time Series Analysis.
+In statistics, a Markov Chain is a stochastic process that models a sequence of random variables in which the distribution of the next state depends only on the current state or a limited number of past observations, and we call this structure a Markov process. This model was first introduced by Andrey Markov in the early 20th century [@markov]. Building on this idea, Hidden Markov Model (HMM) which has two sequences of random variables, one to be hidden and another to be observed, with hidden variables modeling as the Markov process [@baum1]. This paper will introduce the HMM and discuss some important algorithms.
 
-The Hidden Markov Models was firstly proposed by Baum through a series of papers between the 1960s and 1970s. The initial settings of HMMs follows that, suppose $\{X_t\}$ with stochatic matrix $\{a_{ij}\}$ is a s-state Markov Process and define $\{Y_t\}$ as a probabilistic function of $\{X_t\}$ [@baum1]. The conditional probability of $Y_t$ given all the past values of $\{X_t\}$ and $\{Y_t\}$ up to time $t$ is defined as $b_{jk}$. In their first paper, they proved the consistency of the likelihood of the $\{Y_t\}$ and the smoothness property of the expectation of the log-likelihood of $\{Y_t\}$ wrt to the parameter $\boldsymbol\theta$ from $\{a_{ij}\}$ and $\{b_{ij}\}$ [@baum1]. In their later paper in the 1970s, they further introduced an iterative method for estimating the model parameters and proved that the algorithm converges to a local maximum [@baum1]. This method later became known as the Baum-Welch algorithm, which is the EM Algorithm in HMMs [@zucchini]. The parameters $\{a_{ij}\}$ and $\{b_{ij}\}$ are now commonly referred to as the transition distribution and emission distribution, respectively [@zucchini].
+The Hidden Markov Model was first proposed by Baum through a series of papers between the 1960s and 1970s [@baum1]. The initial settings of HMMs follows that, suppose $\{X_t\}$ with stochatic matrix $\{a_{ij}\}$ is a s-state Markov Process and define $\{Y_t\}$ as a probabilistic function of $\{X_t\}$ [@baum1]. The conditional probability of $Y_t$ given all the past values of $\{X_t\}$ and $\{Y_t\}$ up to time $t$ is defined as $b_{jk}$. In their first paper, they proved the consistency of the likelihood of the $\{Y_t\}$ and the smoothness property of the expectation of the log-likelihood of $\{Y_t\}$ wrt to the parameter $\boldsymbol\theta$ from $\{a_{ij}\}$ and $\{b_{ij}\}$ [@baum1]. In their later paper in the 1970s, they further introduced an iterative method for estimating the model parameters and proved that the algorithm converges to a local maximum [@baum1]. This method later became known as the Baum-Welch algorithm, which is the EM Algorithm in HMMs [@zucchini]. The parameters $\{a_{ij}\}$ and $\{b_{ij}\}$ are now commonly referred to as the transition distribution and emission distribution, respectively [@zucchini].
 
 One of the popular applications of HMMs in the Time Series Analysis is GARCH-HMMs or Regime-Switching GARCH [@cai]. It captures the volatility process changes, which may depend on some unobserved regimes, and we assume the changes of hidden states following a Markov process. In this hybrid model, the HMMs divide the time series with different volatility levels and then use the GARCH model to model the time-varying variance within each regime [@zhuang]. For example, in financial time series, this allows the model to shift between high and low volatility periods, such as market booms and crashes. We can, therefore, predict the state the next time and choose the corresponding local GARCH model to predict the volatility. This model is advantageous as it allows us to see how volatility changes between different levels and specific GARCH for each level.
 
-Another significant development in HMMs is Automatic Speech Recognition (ASR). It is based on HMMs and became well-known by IBM and Bell Lab in the 1980s [@ibm]. It has been considered an important tool to enhance the performance of human-human and human-machine communications. A famous one is Apple's Siri, which can be acted as a virtual assistant. The basic algorithm for HMMs in ASR is to set hidden states to be the phonetic characters and use the properties of HMMs to identify the true sentence that the speaker is saying. It can even be used to predict what the speaker is trying to say given what he already said. Moreover, one of the most recent studies of ASR uses Deep learning methods such as Deep Neural Networks to construct multiple hidden layers to recognize speech, which are the Deep Neural Networks Markov Models for ASR [@asr].
+Another significant development in HMMs is Automatic Speech Recognition (ASR). It is based on HMMs and became well-known by IBM and Bell Lab in the 1980s [@ibm]. It has been considered an important tool to enhance the performance of human-human and human-machine communications. A famous one is Apple's Siri, which can be acted as a virtual assistant. The basic algorithm for HMMs in ASR is to set hidden states to be the phonetic characters and use the properties of HMMs to identify the true sentence that the speaker is saying. It can even be used to predict what the speaker is trying to say, given what he has already said. Moreover, one of the most recent studies of ASR uses Deep learning methods such as Deep Neural Networks to construct multiple hidden layers to recognize speech, which are the Deep Neural Networks Markov Models for ASR [@asr].
 
-This paper is structured as follows. Section 2 will briefly review the Markov Chain, along with some properties. Then, Section 3 will introduce the Hidden Markov Model, where we will discuss its definitions and properties. In addition, Section 4 will talk about the Baum-Welch Algorithm, which is the application of the EM algorithm in HMMs. We will also discuss Viterbi Algorithm as well. Section 5 will discuss HMM-GARCH. After that, we will apply this algorithm to real-world scenarios and compare their performance on Section 6. We will also provide some discussion and conclusion in Section 7.
+This paper is structured as follows. Section 2 will briefly review the Markov Chain, along with some properties. Then, Section 3 will introduce the Hidden Markov Model, where we will discuss its definitions and properties. In addition, Section 4 will talk about the Baum-Welch Algorithm, which is the application of the EM algorithm in HMMs. The forecasting and decoind will be discussed at Section 5. After that, we will apply these algorithm to two real-world scenarios and compare their performance in Section 6. We will also provide discussions in Section 7.
 
 # Markov Chains
 
 ## Basics
-Markov Chains models the structure of dependence for a sequence of variables. Let $\{X_t:t\in\mathbb{N}\}$ be a sequence of discrete random variables with values being one *state* from the state space $\mathbf{S}=\{1,\ldots,m\}$ s.t. $|\mathbf{S}|=m$, then such a sequence of variables is called a **Markov Chain (MC)** if, for all $t\in\mathbb{N}$, it satisfies the Markov Property such that
+
+A Markov Chain MC models the structure of dependence for a sequence of variables. Let $\{X_t:t\in\mathbb{N}\}$ be a sequence of discrete random variables, where each $X_t$ takes value in a finite state space $\mathbf{S}=\{1,\ldots,m\}$ with $|\mathbf{S}|=m$. The sequence $\{X_t\}$ is said to form a **Markov Chain (MC)** if, for all $t\in\mathbb{N}$, it satisfies the Markov Property such that
 $$
 P(X_{t+1}|X_t,\ldots,X_1)=P(X_{t+1}|X_t)
 $$
@@ -58,42 +58,33 @@ The Markov Property says that the probability of a random variable in a MC only 
 \caption{First Order Markov Chain}
 \label{fig:markov-chain}
 \end{figure}
-Since each variable is discrete, the probability of transitioning from state $i$ to state $j$ at two consecutive time points is called the **transition probability**, denoted by 
+Since each variable is discrete, the probability of transitioning from state $i$ to state $j$ in one time step is called the **transition probability**, denoted by 
 $$
-\gamma_{ij}=P(X_{t+1}=j|X_t=i)
+\gamma_{ij}=p(X_{t+1}=j|X_t=i)
 $$
-If $\gamma_{ij}$ does not change across time, $p(X_{t+1}=j|X_t=i)=p(X_{t+2}=j|X_{t+1}=i)\:\forall t\in\mathbb{N}$, then such markov chains are said to be **homogeneous (stationary)**. The matrix $\boldsymbol{\Gamma}(1)=\boldsymbol{\Gamma}$ is defined as the transition matrix with $(i,j)^{th}$ element as $\gamma_{ij}$. More generally, if the time points are not consecutive, the transition probability over $t$ time steps is given by $\gamma_{ij}(t)=P(X_{s+t}=j|X_s=i)$ with transition matrix $\boldsymbol{\Gamma}(t)$. It can be shown that 
-$$
-\boldsymbol{\Gamma}(t+u)=\boldsymbol{\Gamma}(t)\boldsymbol{\Gamma}(u)
-$$
-which is so-called the **Champman-Kolmogorov equations**. (Appendix).
+If $\gamma_{ij}$ does not change across time, $p(X_{t+1}=j|X_t=i)=p(X_{t+2}=j|X_{t+1}=i)\:\forall t\in\mathbb{N}$, then such markov chains are said to be **time-homogeneous**. The matrix $\boldsymbol{\Gamma}(1)=\boldsymbol{\Gamma}$ is defined as the transition matrix with $(i,j)^{th}$ element as $\gamma_{ij}$. More generally, the transition probability of moving from state $i$ to $j$ over $t$ time steps is denoted by $\gamma_{ij}(t)=P(X_{s+t}=j\mid X_s=i)$, with corresponding $t$ step transition matrix $\boldsymbol{\Gamma}(t)$, which satisfies
+$\boldsymbol{\Gamma}(t+u)=\boldsymbol{\Gamma}(t)\boldsymbol{\Gamma}(u)$. This is so-called the **Champman-Kolmogorov equations**.
 
 ## Stationary Distribution
 
-The unconditional probabilities $u_j(t)=p(X_t=j)$ is the probability of being in the state $j$ at time $t$. It can be expressed as the row vector $\mathbf{u}(t)$ where
-$$
-\mathbf{u}(t)=\left(p(X_t=1),\ldots,p(X_t=m)\right)=\left(u_1(t),\ldots,u_m(t)\right)\in\mathbb{R}^m
-$$
-It can be shown that $\mathbf{u}(t+1)=\mathbf{u}(t)\boldsymbol\Gamma$. If the Markov Chain runs for a long time, then we would expect that, starting from some point, the Markov Chain will reach out to a steady state. This means that the subsequent time steps have the same distribution, and we call the distribution at the steady state as the **stationary distribution** of Markov Chain, denoted by $\boldsymbol\delta$. Mathematically, $\boldsymbol\delta$ satisfies
+In Markov Chains, the unconditional probabilities $u_j(t)=p(X_t=j)$ is the probability of $X_t$ being in the state $j$ at time $t$. The probabilities can be written as a row vector $\mathbf{u}(t)=\left(p(X_t=1),\ldots,p(X_t=m)\right)=\left(u_1(t),\ldots,u_m(t)\right)\in\mathbb{R}^m$, which can be shown that $\mathbf{u}(t+1)=\mathbf{u}(t)\boldsymbol\Gamma$. Moreover, if we let the Markov Chain runs for a long time, then we would expect that, starting at some point, the Markov Chain will reach out to a steady state. This means that the subsequent time steps have the same distribution even after we apply the transition probabilities, and we call the distribution at the steady state as the **stationary distribution** of Markov Chain, denoted by $\boldsymbol\delta$. Mathematically, $\boldsymbol\delta$ can be computed by
 $$
 \boldsymbol\delta=\boldsymbol\delta\boldsymbol{\Gamma}
 $$
-Moreover, it is easy to see that $\boldsymbol\delta$ is the eigenvector of $\boldsymbol\Gamma$ with eigenvalue 1. This also implies that the stationary distribution $\boldsymbol\delta$ may not be unique. In fact, if a markov chain is irreducible (homogeneous, discrete-time, finite state space), then such markov chains has a unique, strictly positive stationary distribution.
+That is, $\boldsymbol\delta$ is the eigenvector of transition matrix $\boldsymbol\Gamma$ with eigenvalue 1. This equation does not imply the uniqueness of stationary distribution. However, if a markov chain is irreducible (i.e., it is homogeneous, discrete-time, finite state space), then such markov chains has a unique, strictly positive stationary distribution.
 
-In addition, a Markov Chain is said to be **stationary** if it starts at its stationary distribution and continue to have that distribution to all the subsequent time points, implying $\boldsymbol\delta=\mathbf{u}(1)=\cdots=\mathbf{u}(T)$. This is a stronger condition and usually to achieve in practice as it requires to know the exact transition matrix. Besides, the Markov Chain we observed in practice is something that is already running, and we do not have the ability to force it to have the initial state by $\boldsymbol\delta$.
-
-It is important to distinguish between time-homogeneous and stationary Markov Chain. The time-homogeneous Markov Chain says the conditional distribution of hidden variables does not change over time. If a Markov Chain is time-homogeneous and $\mathbf{u}(1)$ is stationary distribution, then this Markov Chain is indeed stationary.
+Moreover, a Markov Chain is said to be **stationary** if its initial distribution is its stationary distribution and remains unchanged to all the subsequent time points, i.e., $\boldsymbol\delta=\mathbf{u}(1)=\cdots=\mathbf{u}(T)$. This is a stronger condition than time-homogeneity and is typically difficult to satisfy in practice, as it requires exact knowledge of the transition matrix and control over the initial distribution. On the other hand, the markov chain observed in real-world scenarios is usually already in progress, and we do not have the ability to set its initial distribution by $\boldsymbol\delta$. Furthermore, it is important to distinguish between time-homogeneous and stationary Markov Chain. The time-homogeneous Markov Chain only states that the conditional distribution of hidden variables is time invariant. The time-homogeneous Markov Chain can only be stationary if its initial distribution $\mathbf{u}(1)$ equals to the stationary distribution.
 
 # Hidden Markov Models
 
-**Hidden Markov Models HMMs** is a particular structure of dependence extending from Markov Chain. Besides the observed variables $\left\{X_t: t \in \mathbb{N}\right\}$, there is an extra sequence of hidden variables $\left\{Z_t: t \in \mathbb{N}\right\}$ modelling by Markov Chain and is linked to the observed variables. More specifically, define $\mathbf{Z}^{(t)}$ and $\mathbf X^{(t)}$ representing the histories for hidden and observed variables up to time $t$, the basic HMM follows
+**Hidden Markov Models HMMs** is a special class of stochastic models that extends the Markov Chain by introducing a latent (hidden) process. In addition to the observed variables $\left\{X_t: t \in \mathbb{N}\right\}$, there is a sequence of hidden variables $\left\{Z_t: t \in \mathbb{N}\right\}$ that is modelled by a Markov Chain. Let $\mathbf{Z}^{(t)}=(Z_1,\ldots,Z_t)$ and $\mathbf X^{(t)}=(X_1,\ldots,X_t)$ denotes the histories for hidden and observed variables up to time $t$ [@zucchini, p.30]. A basic Hidden Markov Model satisfies the following properties:
 $$
 \begin{gathered}
 p\left(Z_t \mid \mathbf{Z}^{(t-1)}\right)=p\left(Z_t \mid Z_{t-1}\right), \quad t\in\{2,3\ldots\}\\ 
 p\left(X_t \mid \mathbf{X}^{(t-1)}, \mathbf{Z}^{(t)}\right)=\operatorname{Pr}\left(X_t \mid Z_t\right), \quad t \in \mathbb{N}
 \end{gathered}
 $$
-A visualization of Basic Hidden Markov Model is shown on Figure 2. Each hidden variable only depends on the previous hidden variable, and the observed variable only depends on the hidden variable at the same time $t$.
+These assumptions imply that each hidden state depends only on the previous hidden state (first-order Markov property), and each observed variable depends only on the hidden state at the same time $t$. A graphical representation of basic Hidden Markov Model is shown on Figure 2, where clearly shows the dependence structure.
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}
@@ -111,113 +102,100 @@ A visualization of Basic Hidden Markov Model is shown on Figure 2. Each hidden v
 \caption{Basic Hidden Markov Model}
 \label{fig:hidden-markov-chain}
 \end{figure}
-All the properties of Markov Chain introduced on the Section 2 are now applied to the hidden variables $\left\{Z_t: t \in \mathbb{N}\right\}$ instead of the observed variables. Moreover, $\left\{X_t: t \in \mathbb{N}\right\}$ is called an $m$-state HMM if $|\mathbf{S}|=m$. In addition, since the observed variables only depends on the corresponding hidden variable, such conditional probability is called the **Emission (state-dependent) distribution** $p_i(x)$ such that
-$$
-p_i(x)=p(X_t=x|Z_t=i)
-$$
-Intuitively, the emission distribution is distribution of the observed variable that the hidden variable "emits" to it. Therefore, there are $m$ emission distributions, corresponding to each state of the hidden states, whcih does not depend on $t$.
+All the properties of Markov Chain introduced on the Section 2 are now applied to the hidden variables $\left\{Z_t: t \in \mathbb{N}\right\}$ rather than the observed variables. The observed process $\left\{X_t: t \in \mathbb{N}\right\}$ is referred as an $m$-state Hidden Markov Model if $|\mathbf{S}|=m$. In addition, since each observed variable $X_t$ only depends on the corresponding hidden variable $Z_t$, the conditional distribution $p(X_t=x|Z_t=i)$ is called the **Emission distribution** (or **state-dependent distribution**), and is denoted by $p_i(x)=p(X_t=x|Z_t=i)$. Intuitively, the emission distribution describes the distribution of the observed variable "emitted" by the hidden state. Each hidden state $i\in\{1,\ldots,m\}$ is associated with a distinct emission distribution $p_i(x)$, and these distributions are normally time-invariant.
 
-## Marginal Distribution and Likelihood
-To estimate the marginal distribution of the observed variables, the method we take is the marginalization that marginalize the hidden variable. Suppose in bivariate cases we have four variables $X_t,X_{t+k},Z_t,Z_{t+k}$, the joint distribution of $p(X_t=a,X_{t+k}=b)$ can be expressed as
+In Hidden Markov Models, it is important to estimate the marginal distribution of the observed variables and the method marginalization over all hidden variable is preferred. Consider a binvariate setting of$X_t,X_{t+1}$, its joint distribution of $p(X_t=a,X_{t+1}=b)$ can be expressed as
 $$
-p(X_t=a,X_{t+k}=b)=\sum_{i}^m\sum_{j}^m p(X_t=a,X_{t+k}=b,Z_t=i,Z_{t+k}=j)
+p(X_t=a,X_{t+1}=b)=\sum_{i}^m\sum_{j}^m p(X_t=a,X_{t+1}=b,Z_t=i,Z_{t+1}=j)
 $$
-By the properties of HMMs, $Z_{t+k}$ only depends on $Z_t$ as we can marginalize the intermediate nodes out, the joint distribution of the four variables can be expressed as $p(Z_t=i)p(X_t=a|Z_t=i)p(Z_{t+k}=j|Z_t=i)p(X_{t+k}=b|Z_{t+k}=j)$. Therefore, the joint distribution of incomplete data can be written as
+Using the dependence structure of HMMs, $Z_{t+1}$ only depends on $Z_t$ as we can marginalize the intermediate nodes out. Then the joint distribution of the four variables can be expressed as $p(Z_t=i)p(X_t=a|Z_t=i)p(Z_{t+1}=j|Z_t=i)p(X_{t+1}=b|Z_{t+1}=j)$. Therefore, the joint distribution of $X_t$ and $X_{t+1}$ can be expressed as
 $$
 \begin{aligned}
-p(X_t = a, X_{t+k} = b)
-&= \sum_{i}^m\sum_{j}^m p(Z_t = i) p(X_t = a \mid Z_t = i) p(Z_{t+k} = j \mid Z_t = i) p(X_{t+k} = b \mid Z_{t+k} = j) \\
-&= \sum_{i}^m\sum_{j}^m u_i(t) p_i(a) \gamma_{ij}(k) p_j(b)\\
-&=\mathbf{u}(t) \mathbf{P}(a) \boldsymbol{\Gamma}^k \mathbf{P}(b) \mathbf{1}^{\prime}
+p(X_t = a, X_{t+1} = b)
+&= \sum_{i}^m\sum_{j}^m u_i(t) p_i(a) \gamma_{ij} p_j(b)\\
+&=\mathbf{u}(t) \mathbf{P}(a) \boldsymbol{\Gamma} \mathbf{P}(b) \mathbf{1}^{\prime}
 \end{aligned}
 $$
-where $\mathbf{P}(x) = \operatorname{diag}(p_1(x), p_2(x), \dots, p_m(x))$. This reduces to $\boldsymbol\delta\mathbf{P}(a) \boldsymbol{\Gamma}^k \mathbf{P}(b) \mathbf{1}^{\prime}$ if the Markov Chain is stationary as we assume the distribution of hidden states at any time $t$ is the stationary distribution $\boldsymbol\delta$
+where $\mathbf{P}(x) = \operatorname{diag}(p_1(x), p_2(x), \dots, p_m(x))$ is the diagonal matrix of emission probabilities, $\mathbf{1}^{\prime}$ is a column vector of ones. It can be further reduced to $\boldsymbol\delta\mathbf{P}(a) \boldsymbol{\Gamma} \mathbf{P}(b) \mathbf{1}^{\prime}$ if the Markov Chain is stationary.
 
-Using the bivariate cases, we can extend it to all observed variables $\{X_t:t\in\{1,\ldots,T\}\}$. Suppose we have initial distribution $\boldsymbol\delta$ and emission probability $p_i(x)$, the likelihood function of observed variables $L_T=p(X_1=x_1,\ldots,X_T=x_T)$ can be written as
+Using the idea on the bivariate case, it can be generalized to the joint likelihood of a full observation sequence $\{X_t:t\in\{1,\ldots,T\}\}$. Given the initial distribution $\boldsymbol\delta$ and emission probability $p_i(x)$, the likelihood function of observed variables is given by [@zucchini, pp.32-33]
 $$
 L_T=\boldsymbol\delta \mathbf{P}\left(x_1\right) \boldsymbol{\Gamma} \mathbf{P}\left(x_2\right) \boldsymbol{\Gamma} \mathbf{P}\left(x_3\right) \cdots \boldsymbol{\Gamma} \mathbf{P}\left(x_T\right) \mathbf{1}^{\prime}
 $$
-If the Markov Chain is stationary, we can replace $\boldsymbol\delta$ by $\boldsymbol{\delta}\mathbf\Gamma$. Note that $\boldsymbol\delta$ usually represents the stationary distribution but however always hard to estimate. With that said, $\boldsymbol\delta$ here represents the distribution of the first hidden variable $Z_1$.\
+If the Markov Chain is stationary, we can also write the $\boldsymbol\delta$ as $\boldsymbol{\delta}\mathbf\Gamma$. However, as previously discussed, this substitution requires the exact knowledge of transition matrix. Therefore, in this context, the $\boldsymbol\delta$ here is interpreted as the distribution of the first hidden variable $Z_1$, and we will retain this interpretation in the remainder of this paper.\
 
 # EM Algorithm in HMMs
 
-The Expectation-Maximization (EM) algorithm is a recursive algorithm to perform the Maximum Likelihood Estimation when some values are missing. It is advantagenous when likelihood function is complicated and direct maximum likelihood estimation is inappropriate. It firstly calculate the expected likelihood of complete data given the incompleted (observed) data and current estimate of $\boldsymbol\theta$ (expectation). It then then maximize the expected likelihood to update $\hat{\boldsymbol\theta}$ (maximization). We run this for multiple time until convergence, and hence find the estimates. The resulting estimates of $\boldsymbol\theta$ is hence a stationary point of the observed data.
+The Expectation-Maximization (EM) algorithm is an iterative procedure for computing maximum likelihood estimates when some values are missing or unobserved. It is particularly advantageous when the likelihood function is complex or intractable to maximize directly. The EM Algorithm is divided into Expectation (E) and Maximization (M) step. In E step, it computes the expected complete-data log-likelihood given the observed or incomplete data and the current estimate of the parameters. It then maximizes this expected log-likelihood derived in E step to update the parameter estimates, which is so-called the M step. These two steps are repeated until convergence, where it yields parameter estimates that are stationary point (typically a local maximum) of the observed-data likelihood [@bickel2015mathematical].
 
-EM algorithm can also be applied to HMMs in a very straightforward way. As the hidden states can not be observed directly, which can be naturally treated as "missing." We can then apply the EM algorithm to recursively estimate $\boldsymbol\theta$, which is so-called the **Baum-Welch Algorithm**. This section will discuss both Expectation and Maximization step, respectively.
+The EM Algorithm are naturally applied in Hidden Markov Models as the hidden state sequence are unobserved and thus treated as missing data. The observed data are referred as the incomplete data. By applying EM in this context, we iteratively estimate the model parameters $\boldsymbol\theta$, which is so-called the **Baum-Welch Theorem** [@baum2]. In this section, we will discuss and prove the Expectation and Maximization steps in details.
 
 ## Forward-Backward Algorithm
 
-The Forward-Backward Algorithm is one of the fundamental procedure to compute the posterior probability of the hidden states at each time step given the full sequence of observed data. In formula, it evaluates $p\left(Z_t=z_t\mid \mathbf{X}^{T}=\mathbf{x}^{T}\right)$, which is crucial as the hidden state are not directly observable. It relies on the two important quantities: **forward probabilities** and **backward probabilities**, defined as $\alpha_t(j)=p(\mathbf{X}^{(t)}=\mathbf{x}^{(t)},Z_t=j)$ and $\beta_t(i)=p(\mathbf{X}^T_{t+1}=\mathbf{x}^T_{t+1}|Z_t=i)$. The names of "forward" and "backward" comes from the direction in which each quantity transfer the information. The forward probabilities accumulates the information from $t=1$ to the present time $t$, while the backward probabilities integrate the information from the future $t=T$ to the present. In this part, we will discuss how the two quantities are defined in this way, and eventually show that the posterior probability is proportional to their products.
-
-Both $\alpha_t(i)$ and $\beta_t(i)$ is came naturally from the factorization of the likelihood function. In matrix form, the forward probabilities $\alpha_t$ can be expressed as
-$$
-\boldsymbol{\alpha}_t =\boldsymbol{\delta} \mathbf{P}\left(x_1\right) \prod_{s=2}^t \boldsymbol{\Gamma} \mathbf{P}\left(x_s\right)
-$$
-which we can show that $\alpha_t(j)=p(\mathbf{X}^{(t)}=\mathbf{x}^{(t)},Z_t=j)$. Similarly, the backward probabilities can be expressed as
-$$
-\boldsymbol{\beta}_t^{\prime}=\left(\prod_{s=t+1}^T \boldsymbol{\Gamma} \mathbf{P}\left(x_s\right)\right)\mathbf{1}^{\prime}
-$$
-implying $\beta_t(i)=p(\mathbf{X}^T_{t+1}=\mathbf{x}^T_{t+1}|Z_t=i)$ (Appendix). As we will show later, the posterior probability over the hidden state is proportional to the product $\alpha_t(j)\beta_t(i)$.
-
-The task of hidden state inference from Forward-Backward Algorithm breaks down into three parts: **filtering**, **prediction** and **smoothing**. In filtering, the goal is to compute the posterior probability of the current hidden state at the current time $t$, given all observations up to that point. This is equivalent to *filtered* marginals $\tilde{\alpha}_t(j)=p(Z_t=j|\mathbf{X}^{(t)}=\mathbf{x}^{(t)})\propto\alpha_t(j)$. For example, the posterior over $Z_t$ given the observations up to $t-1$ can be expressed by
+Before diving into EM algorithm, it is necessary to first discuss the Forward-Backward algorithm, as it plays a key role in the Expectation (E) step. The Forward-Backward algorithm is a fundamental procedure for computing the posterior distribution of the hidden states at each time point, given the entire sequence of observed data. Specifically, it evaluates $p\left(Z_t=z_t\mid \mathbf{X}^{T}=\mathbf{x}^{T}\right)$, which is crucial in Hidden Markov Models, as the hidden states are not directly observable. The key thing in Forward-Backward Algorithm are the **forward probabilities** and **backward probabilities**, denoted by $\boldsymbol\alpha_t$ and $\boldsymbol\beta_t$, respectively [@zucchini, pp.65-68]. Formally, they are defined as
 $$
 \begin{aligned}
-P(Z_t = j \mid \mathbf{x}^{(t-1)}) 
-&= \sum_i P(Z_{t+1} = i, Z_t = j \mid \mathbf{x}^{(t+1)}) \\
-&= \sum_i P(Z_t = j \mid Z_{t+1} = i, \mathbf{x}^{(t+1)}) \, P(Z_{t+1} = i \mid \mathbf{x}^{(t+1)}) \\
-&= \sum_i P(Z_t = j \mid Z_{t+1} = i) \, \alpha_{t+1}(i) \\
-&= \sum_i \gamma_{ij} \, \alpha_{t+1}(i) \\
-&= \left(\alpha_{t+1}^T\Gamma\right)_j
+\boldsymbol{\alpha}_t &=\boldsymbol{\delta} \mathbf{P}\left(x_1\right) \boldsymbol{\Gamma} \mathbf{P}\left(x_2\right) \cdots \boldsymbol{\Gamma} \mathbf{P}\left(x_t\right)=\boldsymbol{\delta} \mathbf{P}\left(x_1\right) \prod_{s=2}^t \boldsymbol{\Gamma} \mathbf{P}\left(x_s\right)\\
+\boldsymbol{\beta}_t^{\prime}&=\boldsymbol{\Gamma} \mathbf{P}\left(x_{t+1}\right) \boldsymbol{\Gamma} \mathbf{P}\left(x_{t+2}\right) \cdots \boldsymbol{\Gamma} \mathbf{P}\left(x_T\right) \mathbf{1}^{\prime}=\left(\prod_{s=t+1}^T \boldsymbol{\Gamma} \mathbf{P}\left(x_s\right)\right)\mathbf{1}^{\prime}
 \end{aligned}
 $$
-This idea can be extended to estimate $P(Z_{t+k} = j \mid \mathbf{x}^{(t)})$ for $k>1$.
+where the parameters are defined in the same way as previous. The terms forward and backward refer to the direction in which each quantity propagates information. The forward probabilities accumulate evidence from the beginning of the sequence, $t=1$ up to current time $t$. In contrast, the backward probabilities aggregate information from the future $(t=T)$ backward to the present. In the following, we will see how these quantities are computed recursively, and demonstrate that the posterior probability of the hidden state at time $t$ is proportional to the product of the forward and backward probabilities.
 
-Finally, the smoothing provides a refined estimate of the hidden state at time $t$  by conditioning on the entire data $\mathbf{x}^{(T)}$. The smoothed posterior probability is given by
+Both $\alpha(i)$ and $\beta(i)$ are derived naturally from the factorization of the likelihood function $L_T$. The forward probabilities can be recursively expressed as $\boldsymbol{\alpha}_{t+1}=\boldsymbol{\alpha}_t \boldsymbol{\Gamma} \mathbf{P}\left(x_{t+1}\right)$. Equivalently, each component of $\boldsymbol{\alpha}_{t+1}$ can be expressed as $\alpha_{t+1}(j)=\left(\sum_{i=1}^m \alpha_t(i) \gamma_{i j}\right) p_j\left(x_{t+1}\right)$. At $t=1$, $\alpha_1(j)=\delta_j p_j\left(x_1\right)=p\left(Z_1=j\right) p\left(X_1=x_1 \mid Z_1=j\right)$. Using induction (see Appendix 8.1), it can be further showed that
 $$
-\begin{aligned}
-p\left(z_t \mid \mathbf{x}^T\right) &\propto p\left(z_t, \mathbf{x}^T\right) \\
-&=p\left(z_t, \mathbf{x}^t, \mathbf{x}^T_{t+1}\right) \\
-&=p\left(z_t, \mathbf{x}^t\right) p\left(\mathbf{x}^T_{t+1} \mid z_t, \mathbf{x}^t\right) \\
-&=p\left(z_t, \mathbf{x}^t\right) P\left(\mathbf{x}^T_{t+1} \mid z_t\right)\\
-&=\alpha_t(z_t)\beta_t(z_t)
-\end{aligned}
+\alpha_t(j)=\operatorname{Pr}\left(\mathbf{X}^{(t)}=\mathbf{x}^{(t)}, Z_t=j\right)\:\forall t\in\{1,\ldots,T\},\:j\in\{1,\ldots,m\}
+$$ 
+Similarly, the backward probabilities can be expressed as
 $$
-By combining the forward and backward probabilities, it provides us an effective way to estimate the hidden state for any time $t$ given the entire observed data. It can be used to find the "beliefs" of the hidden state. We will show later that the Forward-Backward Algorithm is closely related to the E-step in the EM Algorithm and it can be also used as the local decoding on the next session.
+\beta_t(i)=p(\mathbf{X}^T_{t+1}=\mathbf{x}^T_{t+1}|Z_t=i)
+$$
+where $\mathbf{X}_a^b=\left(X_a, X_{a+1}, \ldots, X_b\right)$ [@zucchini, pp67-68]. Given these definitions, the joint probability of the full observed sequence and the hidden state being in state $j$ at time $t$ can be expressed as the product of the two (Appendix 8.2), that is
+$$
+\operatorname{Pr}\left(\mathbf{X}^{(T)}=\mathbf{x}^{(T)}, Z_t=j\right)=\alpha_t(j) \beta_t(j)
+$$
+Using the results established above, we can now compute the posterior distribution of the hidden state at any time point $t\in\{1,\ldots,T\}$. The probability that the hidden state at time $t$ is equal to $j$, given the entire observed sequence, is given by:
+$$
+\operatorname{Pr}\left(Z_t=j \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)=\alpha_t(j) \beta_t(j) / L_T
+$$
+Furthermore, the joint posterior probability of two consecutive hidden states $Z_{t-1}=i$ and $Z_t=j$ for $t\in\{2,\ldots,T\}$ is given by (see Appendix 8.3)
+$$
+\operatorname{Pr}\left(Z_{t-1}=j, Z_t=k \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)=\alpha_{t-1}(j) \gamma_{j k} p_k\left(x_t\right) \beta_t(k) / L_T
+$$
+These results provides us an effective way to estimate the hidden state for any time $t$ conditional the entire observed data by combining the forward and backward probabilities. This can help us to find "beliefs" of the hidden state. As we will discuss in the next section, the Forward-Backward algorithm is intimately connected to the E-step of the EM algorithm. It is also important in local decoding strategies as well.
 
 ## Expectation Step
 
-In the Expectation-Maximization (EM) algorithm for Hidden Markov Models, the E-step involves computing the expectation of the complete-data log-likelihood given the observed data and the current parameter estimates. In the context of HMMs, the complete data combines both the observed data $x_t$ and the corresponding hidden states $z_t$. Since the hidden states are not directly observed, it naturally becomes the missing part. We will firstly express the complete-data likelihood, and then evaluate its expectation conditional on the observed data sequence.
+In the Expectation-Maximization (EM) algorithm for Hidden Markov Models, the E-step involves computing the expectation of the complete-data log-likelihood given the incomplete data and the current parameter estimates [@bickel2015mathematical]. In the context of HMMs, the complete data combines both the observed data $\{x_t\}_{t=1}^T$ and the corresponding hidden states $\{z_t\}_{t=1}^T$. Since the hidden states are not directly observed, it naturally becomes the missing part. In this section, we will firstly express the complete-data likelihood, and then evaluate its expectation conditional on the observed data sequence.
 
-Let the parameters be $\boldsymbol\theta = \left( \boldsymbol\delta, \boldsymbol\Gamma, \boldsymbol\lambda\right)$, where $\boldsymbol\delta$ is the initial distribution, $\boldsymbol\Gamma$ is the transition matrix with $(i,j)th$ element $\gamma_{ij}$, and $\boldsymbol\lambda$ be the emission distribution specific parameters. Let the complete data be $\mathcal{D}_{complete}=\left\{ \mathbf{X}^{(T)} = \mathbf{x}^{(T)}, \mathbf{Z}^{(T)} = \mathbf{z}^{(T)} \right\}$. Using the standard factorization of joint distribution of HMMs, the log-likelihood function can be written as
+Let the parameters be $\boldsymbol\theta = \left( \boldsymbol\delta, \boldsymbol\Gamma, \boldsymbol\lambda\right)$, where $\boldsymbol\delta$ is the initial distribution, $\boldsymbol\Gamma$ is the transition matrix with $(i,j)^{th}$ element $\gamma_{ij}$, and $\boldsymbol\lambda$ be the emission distribution specific parameters. Let the complete data be $\mathcal{D}_{complete}=\left\{ \mathbf{X}^{(T)} = \mathbf{x}^{(T)}, \mathbf{Z}^{(T)} = \mathbf{z}^{(T)} \right\}$. Using the standard factorization of joint distribution of HMMs in Section 3, the log-likelihood function over $\mathcal{D}_{complete}$ can be written as
 $$
 \begin{aligned} 
-\ell\left(\boldsymbol\theta|\mathcal{D}_{complete}\right)&=\log\left(p\left(z_1\right) \prod_{t=2}^T p\left(z_t | z_{t-1}\right) \prod_{t=1}^T p\left(x_t | z_t\right)\right)\\
+\ell\left(\boldsymbol\theta\mid\mathcal{D}_{complete}\right)&=\log\left(p\left(z_1\right) \prod_{t=2}^T p\left(z_t \mid z_{t-1}\right) \prod_{t=1}^T p\left(x_t \mid z_t\right)\right)\\
 & =\log \delta_{z_1}+\sum_{t=2}^T \log \gamma_{z_{t-1}, z_t}+\sum_{t=1}^T \log p_{z_t}\left(x_t\right)
 \end{aligned}
 $$
-However, the log-likelihood expression above is written in terms of specific hidden states $z_t$, and does not explicitly leading to the parameters $\boldsymbol\theta$. To solve this, we introduce two new indicator variables $u_j(t) = \mathbf{1}\{Z_t = j\},\:t\in\{1,\ldots,T\}$ and $v_{jk}(t) = \mathbf{1}\{Z_{t-1} = j, Z_t = k\},\:t\in\{2,\ldots,T\}$. By plugging in the indicators, the log-likelihood function becomes
+However, the log-likelihood expression above is written in terms of specific hidden states $z_t$, and does not explicitly leading to the parameters $\boldsymbol\theta$. To solve this, we introduce two new indicator variables $u_j(t) = \mathbf{1}\{Z_t = j\},\:t\in\{1,\ldots,T\}$ and $v_{jk}(t) = \mathbf{1}\{Z_{t-1} = j, Z_t = k\},\:t\in\{2,\ldots,T\}$ [@zucchini, pp.70-71]. By plugging in the indicators, the log-likelihood function becomes
 $$
 \ell\left(\boldsymbol\theta|\mathcal{D}_{complete}\right) = \sum_{j=1}^m u_j(1) \log \delta_j+\sum_{j=1}^m \sum_{k=1}^m\left(\sum_{t=2}^T v_{j k}(t)\right) \log \gamma_{j k}  +\sum_{j=1}^m \sum_{t=1}^T u_j(t) \log p_j\left(x_t\right)
 $$
-The two indicator variables depends only on the hidden states which is unobserved. On the other hand, the rest term on the log-likelihood are all parameters which is not random. Therefore, in the E-step, we only need to compute the expectation of $u_j(1),v_{jk}(t),u_j(t)$ conditioning on the observed data $\mathbf{x}^{(T)}$ and the current estimates of $\boldsymbol\theta$. It can be shown that these expectations are (Appendix)
+The only random terms in the log-likelihood function are only the two indicator variables which depends only on the hidden states. The rest terms on the log-likelihood are all parameters which is not random. Therefore, in the E-step, we only need to compute the expectation of $u_j(1),v_{jk}(t),u_j(t)$ conditioning on the observed data $\mathbf{X}^{(T)}=\mathbf{x}^{(T)}$ and the current $\hat{\boldsymbol\theta}$ [@zucchini, pp.71-72]. Using the Forward-Backward Algorithm, it can be shown that the conditional expectations are given by
 $$
 \begin{aligned}
-\mathbb{E}[u_j(t)|\mathbf{x}^{(T)},\hat{\boldsymbol\theta}]&=p\left(C_t=j\mid\mathbf{x}^{(T)},\hat{\boldsymbol\theta}\right)\\
-&=\hat\alpha_t(j)\hat\beta_t(j)/\hat{L}_T\\
-&=:\hat{u}_j(t)
+\mathbb{E}[u_j(t)|\mathbf{x}^{(T)},\hat{\boldsymbol\theta}]&=p\left(Z_t=j\mid\mathbf{x}^{(T)},\hat{\boldsymbol\theta}\right)\\
+&=\hat\alpha_t(j)\hat\beta_t(j)/\hat{L}_T=:\hat{u}_j(t)
 \end{aligned}
 $$
+and for $t\geq2$
 $$
 \begin{aligned}
-\mathbb{E}[v_{j k}(t)|\mathbf{x}^{(T)},\hat{\boldsymbol\theta}]&=p\left(C_{t-1}=j, C_t=k \mid \mathbf{x}^{(T)},\hat{\boldsymbol\theta}\right)\\
-&=\hat\alpha_{t-1}(j)\hat\gamma_{j k}\hat{p}_k\left(x_t\right)\hat\beta_t(k) / \hat{L}_T\\
-&=:\hat{v}_{j k}(t)
+\mathbb{E}[v_{j k}(t)|\mathbf{x}^{(T)},\hat{\boldsymbol\theta}]&=p\left(Z_{t-1}=j, Z_t=k \mid \mathbf{x}^{(T)},\hat{\boldsymbol\theta}\right)\\
+&=\hat\alpha_{t-1}(j)\hat\gamma_{j k}\hat{p}_k\left(x_t\right)\hat\beta_t(k) / \hat{L}_T=:\hat{v}_{j k}(t)
 \end{aligned}
 $$
-where the estimated forward and backward probabilities are estimated by
+where the estimated forward and backward probabilities are computed recursively as:
 $$
 \begin{gathered}
-\hat\alpha_{t+1}(j)=\sum_{i=1}^m \hat\alpha_t(i)\hat\gamma_{ij}\hat{p}_j\left(x_{t+1}\right)\text{ s.t. }\alpha_1(j)=\delta_j p_j\left(x_1\right)\\ \hat\beta_t(i)=\sum_{j=1}^m\hat\gamma_{ij}\hat{p}_j\left(x_{t+1}\right)\hat{\beta}_{t+1}(j)\text{ s.t. }\beta_T(j)=1
+\hat\alpha_{t+1}(j)=\sum_{i=1}^m \hat\alpha_t(i)\hat\gamma_{ij}\hat{p}_j\left(x_{t+1}\right)\text{ s.t. }\hat\alpha_1(j)=\hat\delta_j \hat{p}_j\left(x_1\right)\\ \hat\beta_t(i)=\sum_{j=1}^m\hat\gamma_{ij}\hat{p}_j\left(x_{t+1}\right)\hat{\beta}_{t+1}(j)\text{ s.t. }\hat\beta_T(j)=1
 \end{gathered}
 $$
 And the estimated likelihood is given by
@@ -235,7 +213,7 @@ In M step, we maximize the expected log-likelihood $\mathbf{Q}(\boldsymbol\theta
 $$
 \hat{\boldsymbol\theta}^{new}=\arg \max _\theta \mathbf{Q}(\boldsymbol\theta,\hat{\boldsymbol\theta})
 $$
-Conveniently, the subjective function separates to three terms with each depending on a component of $\boldsymbol\theta$: the initial distributions, transition matrix and emission parameters. This allows us to maximize each set of independent parameters. Taking the derivatives for each time, we can obtain the closed-form updates for $\boldsymbol\delta$ and $\boldsymbol\Gamma$ as
+Conveniently, the subjective function separates to three terms with each depending on a component of $\boldsymbol\theta$: the initial distributions $\delta_j$, transition matrix $\gamma_{ij}$ and emission parameters $p_j(x_t)$. This allows us to maximize each set of independent parameters. Taking the derivatives for each time, we can obtain the closed-form updates for $\boldsymbol\delta$ and $\boldsymbol\Gamma$ (see Appendix 8.4) as
 $$
 \begin{gathered}
 \delta_j=\frac{\widehat{u}_j(1)}{\sum_{j=1}^m \widehat{u}_j(1)}=\widehat{u}_j(1)\\
@@ -244,37 +222,36 @@ $$
 $$
 However, the estimates for the emission parameters $\boldsymbol\lambda$ depends on the specific form of the emission model and we can not provide a general formula here.
 
-We will run EM Algorithm recursively until convergence.
+We will run EM Algorithm recursively until convergence, though the rate and quality of convergence can vary depending on factors such as the choice of initial parameter estimates, the characteristics of the data etc. Similar to many other convergence algorithm the EM algorithm does not guarantee convergence to the global maximum of the likelihood function; rather, it may converge to a local maximum, especially in models with complex likelihood such as Hidden Markov Models [@zucchini, pp.72-73; @bickel2015mathematical]. Another important thing is that we must state whether we assume the markov chain is stationary. This crucial because, recall in Section 3, we can replace the $\boldsymbol\delta$ to $\boldsymbol\delta\boldsymbol\Gamma$ if the Markov Chain is stationary. This assumption has a direct impact on the parameter estimation process and must therefore be explicitly stated prior to performing the EM algorithm. Lastly, in this paper, we will use the R package `HiddenMarkov` [@hiddenmarkov] to run the EM instead of manually writing the iterative function. More practical applications of implementing EM Algorithm in HMMs will be presented in Section 6.
 
 # Forecast and Decoding
 
-Forecast and decoding are two important implications from HMMs, which can help us to predict the 
+Forecast and decoding are two important implications from HMMs, which can help us to understand the data better. In HMMs, the term "forecasting" usually infers to predict the future values of the observed variables $X_t$. In contrast, "decoding" means we use the observed values to compute the most likely hidden states [@pml2Book]. In this section, we are going to discuss how to predict the observed variable in the future. More importantly, we are going to discuss two kinds of decoding process which are local and global decoding. The two decoding methods are similar but differed on the number of hidden states we estimate every time. We will discuss more details in the rest part of this section.
 
 ## Forecasting
 
-The forecasting in HMMs means we want to predict the values of the observed variables given the information we have. It describes the conditional distribution of the $X_{T+h}$ given all the observed values we have up to time $T$. The conditional distribution can be expressed as
+The forecasting in HMMs means we want to predict the values of the observed variables given the information we have. It describes the conditional distribution of the $X_{T+h}$ given all the observed values we have up to time $T$, which are expressed as
 $$
 \begin{aligned}
 p(X_{T+h}=x|\mathbf{X}^{(T)}=\mathbf{x}^{(T)})&=\frac{p(X_{T+h}=x,\mathbf{X}^{(T)}=\mathbf{x}^{(T)})}{p(\mathbf{X}^{(T)}=\mathbf{x}^{(T)})}\\
-&=\frac{\boldsymbol\delta \mathbf{P}\left(x_1\right)\cdots \boldsymbol{\Gamma} \mathbf{P}\left(x_T\right)\boldsymbol{\Gamma}^h \mathbf{P}\left(x\right)\mathbf{1}^{\prime}}{\boldsymbol\delta \mathbf{P}\left(x_1\right)\cdots \boldsymbol{\Gamma} \mathbf{P}\left(x_T\right)}\\
 &=\frac{\boldsymbol\alpha_T\boldsymbol{\Gamma}^h \mathbf{P}\left(x\right)\mathbf{1}^{\prime}}{\boldsymbol\alpha_T\mathbf{1}^{\prime}}
 \end{aligned}
 $$
-Let $\boldsymbol\phi_T=\frac{\boldsymbol\alpha_T}{\boldsymbol\alpha_T\mathbf{1}^{\prime}}$, then it can be written as $\phi_T\boldsymbol\Gamma^h\mathbf{P}(x)\mathbf{1}^{\prime}$. It can be also written in terms of a mixture of the emission distribution $p\left(X_{T+h}=x \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)=\sum_{i=1}^m \xi_i(h) p_i(x)$, where $\xi_i(h)$ is $i$th entry of the vector $\phi_T\boldsymbol\Gamma^h$.
+Moreover, let $\boldsymbol\phi_T=\frac{\boldsymbol\alpha_T}{\boldsymbol\alpha_T\mathbf{1}^{\prime}}$, then it can also be written as $\phi_T\boldsymbol\Gamma^h\mathbf{P}(x)\mathbf{1}^{\prime}$. It can be also written in terms of a mixture of the emission distribution $p\left(X_{T+h}=x \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)=\sum_{i=1}^m \xi_i(h) p_i(x)$, where $\xi_i(h)$ is $i$th entry of the vector $\phi_T\boldsymbol\Gamma^h$.
 
-One important implication of the forecasted conditional distribution is that, as $h$ increases, the forecast distribution converges to the marginal distribution of the stationary HMM, that is
+One important implication of the forecasted conditional distribution is that, as $h$ increases, the forecast distribution converges to the marginal distribution of the stationary HMM [@zucchini, p.85], that is
 $$
 \lim _{h \rightarrow \infty} \operatorname{Pr}\left(X_{T+h}=x \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)=\lim _{h \rightarrow \infty} \boldsymbol{\phi}_T \boldsymbol{\Gamma}^h \mathbf{P}(x) \mathbf{1}^{\prime}=\boldsymbol{\delta}^* \mathbf{P}(x) \mathbf{1}^{\prime}
 $$
-where $\boldsymbol{\delta}^*$ is the stationary distribution and $\boldsymbol{\delta}$ is the initial distribution. It shows that for any non-negative row vectors with row sum 1 ($\boldsymbol{\delta}^*$ here) approaches the stationary distribution of the Markov Chain. However, this property can be only applied to irreducible and aperiodic Markov Chain []. We call $\boldsymbol{\delta}^* \mathbf{P}(x) \mathbf{1}^{\prime}$ as the limiting distribution of the Markov Chain. The speed of converging to the limiting distribution may various. We will discuss more about this in the application part.
+where $\boldsymbol{\delta}^*$ is the stationary distribution of the Markov Chain. It shows that for any non-negative row vectors with row sum 1 ($\boldsymbol{\delta}^*$ here) approaches the stationary distribution of the Markov Chain. However, this property can be only applied to irreducible and aperiodic Markov Chain [@zucchini, p.85]. We call $\boldsymbol{\delta}^* \mathbf{P}(x) \mathbf{1}^{\prime}$ as the limiting distribution of the Markov Chain. The speed of converging to the **limiting distribution** may various. We will discuss more about this in the application part.
 
 ## Decoding
 
-In HMMs, the term "forecasting" usually infers to predict the future values of the observed variables $X_t$. In contrast, "decoding" describes the way we use the observed values to compute the most likely hidden states. In this paper, we are going to discuss two kinds of decoding process: local and global decoding. The difference between these two is the number of hidden state we compute each time. If we only decode on hidden state, then it refers the local decoding. If we decode several hidden states simultaneously, it is refered as global decoding.
+There are two types of decoding: local and global decoding. Their goals are both to estimate the hidden states given the observed variables but local decoding only estimated once a time but global decoding aims to estimate the sequence of hidden states simultaneously. The local decoding is fully based on the Forward-Backward Algorithm we discussed previously, which is simply the conditional distribution of hidden state at time $t$ given all the observed variables. We will discuss them in more details in this section.
 
 ### Local Decoding
 
-The algorithm for local decoding is simple. Recall that the joint distribution $p\left(Z_t=i, \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)$ can be expressed as the product of forward and backward probabilities, $\alpha_t(i) \beta_t(i)$. Then the conditional distribution of being on state $i$ at time $t$ is
+The algorithm for local decoding is simple. Recall that the joint distribution $p\left(Z_t=i, \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)$ can be expressed as the product of forward and backward probabilities, $\alpha_t(i) \beta_t(i)$ [@zucchini, pp.87-88]. Then the conditional distribution of being on state $i$ at time $t$ is
 $$
 p\left(Z_t=i \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right) =\frac{p\left(Z_t=i, \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)}{p\left(\mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)}
 $$
@@ -287,22 +264,22 @@ Then for each $t\in\{1,\ldots,T\}$, we can compute the most probable hidden stat
 $$
 i_t^*=\underset{i=1, \ldots, m}{\operatorname{argmax}} p\left(Z_t=i \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)
 $$
-By this approach, we can find the most likely hidden state at any time $t\leq T$, and this approach is called the local decoding.
+By this approach, we can find the most likely hidden state at any time $t\leq T$ once a time, and this approach is called the local decoding as we are estimating locally and not realted to other hidden states.
 
 ### Global Decoding
 
-In contrast to local decoding, global decoding allows us to compute a sequence of hidden states together instead of a single hidden state. It is noticeble that global decoding is not equivalent to run the local decoding for multiple times. The difference between the two is that running local decoding multiple times may give us unrealistic sequence such as impossible transition. We prefer global decoding as it will give us a probable and reasonable sequence of hidden states, while still keep the realistic transition probabilities.
+In contrast to local decoding, global decoding allows us to compute a sequence of hidden states together instead of a single hidden state. It is noticeble that global decoding is not equivalent to run the local decoding for multiple times. The difference between the two is that running local decoding multiple times may give us unrealistic sequence such as impossible transition. However, we want to estimate the hidden states together to keep the joint distribution. This is motivation behind the global decoding, as we prefer global decoding as it will give us a probable and reasonable sequence of hidden states, while still keep the realistic transition probabilities.
 
 In global decoding, our goal is to to maximize
 $$
 \begin{aligned}
-p(\mathbf{Z}^{(t)}=\mathbf{z}^{(t)}|\mathbf{X}^{(t)}=\mathbf{x}^{(t)})&\propto p(\mathbf{Z}^{(t)}=\mathbf{z}^{(t)}|\mathbf{X}^{(t)}=\mathbf{x}^{(t)})\\
+p(\mathbf{Z}^{(t)}=\mathbf{z}^{(t)}|\mathbf{X}^{(t)}=\mathbf{x}^{(t)})&\propto p(\mathbf{Z}^{(t)}=\mathbf{z}^{(t)},\mathbf{X}^{(t)}=\mathbf{x}^{(t)})\\
 &=\delta_{z_1} \prod_{t=2}^T \gamma_{z_{t-1}, z_t} \prod_{t=1}^T p_{z_t}\left(x_t\right)
 \end{aligned}
 $$
 The complete global decoding works as follows
 
-1. We firstly define $\xi_{1,i}=p(Z_1=i,X_1=x1)=\delta_i p_i(x_1)$, meaning that we are at state $i$ at time $1$.
+1. We firstly define $\xi_{1,i}=p(Z_1=i,X_1=x_1)=\delta_i p_i(x_1)$, meaning that we are at state $i$ at time $1$.
 2. For $t\in\{2,3,\ldots,T\}$, we define
 $$
 \xi_{t i}=\max _{z_1, z_2, \ldots, z_{t-1}} p\left(\mathbf{Z}^{(t-1)}=\mathbf{z}^{(t-1)}, Z_t=i, \mathbf{X}^{(t)}=\mathbf{x}^{(t)}\right)
@@ -321,42 +298,42 @@ This step helps us to find the most likely state at the final time $T$. It can b
 $$
 i_t=\underset{i=1, \ldots, m}{\operatorname{argmax}}\left(\xi_{t i} \gamma_{i, i_{t+1}}\right)
 $$
-Then can have the sequence of values of hidden states.
+We are moving backwards from the ending point and recursively find the path corresponding to the highest score. It is similar to step 3, and eventually we will have the most probable path of hidden states.
 
-This algorithm is so-called the Viterbi Algorithm.
+This algorithm is so-called the Viterbi Algorithm [@zucchini, p.90;].
 
-### State Prediction
+## State Prediction
 
-Finally, we are also concerned about how to predict the value of hidden states in the future time $t>T$, $p\left(Z_t=i \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)$. Since $\boldsymbol\alpha_T=p(Z_T,\mathbf{X}^{(T)}=\mathbf{x}^{(T)})$, then the joint distribution can be expressed as $p\left(Z_{T+1},\mathbf{X}^{(T)}\right)=p\left(C_{T+1}=k \mid C_T=j\right)p\left(C_T=j \mid \mathbf{X}^{(T)}\right)=\boldsymbol\alpha_T\boldsymbol\Gamma$. Similarly, we also have $p\left(Z_{T+h},\mathbf{X}^{(T)}\right)=\boldsymbol\alpha_T\boldsymbol\Gamma^h$. To have $p\left(Z_{T+h}=i,\mathbf{X}^{(T)}\right)$, it is equivalent to the $i$-th component of $\boldsymbol\alpha_T\boldsymbol\Gamma^h$, which is equivalent to $\boldsymbol{\alpha}_T \boldsymbol{\Gamma}^h \mathbf{e}_i^{\prime}$, where $\mathbf{e}_i$ is a row vector that only the ith element is 1 and all other are zeros. Therefore the conditional distribution can be written as
+Finally, we are also concerned about how to predict the value of hidden states in the future time $t>T$, $p\left(Z_t=i \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)$. Since $\boldsymbol\alpha_T=p(Z_T,\mathbf{X}^{(T)}=\mathbf{x}^{(T)})$, then the joint distribution can be expressed as $p\left(Z_{T+1},\mathbf{X}^{(T)}\right)=p\left(Z_{T+1}=k \mid Z_T=j\right)p\left(Z_T=j \mid \mathbf{X}^{(T)}\right)=\boldsymbol\alpha_T\boldsymbol\Gamma$. Similarly, we also have $p\left(Z_{T+h},\mathbf{X}^{(T)}\right)=\boldsymbol\alpha_T\boldsymbol\Gamma^h$. To have $p\left(Z_{T+h}=i,\mathbf{X}^{(T)}\right)$, it is equivalent to the $i$-th component of $\boldsymbol\alpha_T\boldsymbol\Gamma^h$, which is equivalent to $\boldsymbol{\alpha}_T \boldsymbol{\Gamma}^h \mathbf{e}_i^{\prime}$, where $\mathbf{e}_i$ is a row vector that only the ith element is 1 and all other are zeros [@zucchini, p.92-93]. Therefore the conditional distribution can be written as
 $$
 p\left(Z_t=i \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)=\frac{p\left(Z_t=i,\mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)}{\boldsymbol\alpha_T\mathbf{1}^\prime}=\frac{\boldsymbol{\alpha}_T \boldsymbol{\Gamma}^h \mathbf{e}_i^{\prime}}{\boldsymbol\alpha_T\mathbf{1}^\prime}=\phi_T \boldsymbol{\Gamma}^h \mathbf{e}_i^{\prime}
 $$
-To sum up, recall that in the Forward-Backward Algorithm, we have derived that $p(Z_t=z_t|\mathbf{X}^{(T)}=\mathbf{x}^{(T)})=\alpha_t(z_t)\beta_t(z_t)$, the forecasting of hidden states can be summarized by
+To sum up, recall that in the Forward-Backward Algorithm, we have derived that $p(Z_t=z_t|\mathbf{X}^{(T)}=\mathbf{x}^{(T)})=\alpha_t(z_t)\beta_t(z_t)$, the forecasting of hidden states at any time $t$ can be summarized by
 $$
-\begin{aligned}
-L_T \operatorname{Pr}\left(C_t\right. & \left.=i \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right) \\
-& = \begin{cases}\boldsymbol{\alpha}_T \boldsymbol{\Gamma}^{t-T} \mathbf{e}_i^{\prime} & \text { for } t>T \\
-\alpha_T(i) & \text { for } t=T \\
-\alpha_t(i) \beta_t(i) & \text { for } 1 \leq t<T\end{cases}
-\end{aligned}
+L_T\Pr(Z_t = i \mid \mathbf{X}^{(T)} = \mathbf{x}^{(T)}) =
+\begin{cases}
+\boldsymbol{\alpha}_T \boldsymbol{\Gamma}^{t - T} \mathbf{e}_i & \text{for } t > T \\
+\alpha_T(i) & \text{for } t = T \\
+\alpha_t(i) \beta_t(i) & \text{for } 1 \leq t < T
+\end{cases}
 $$
 
 # Application
 
-It is easy to performing HMMs in R. Although we can still write the recursive function manually, we can still the R package `HiddenMarkov` [] which performs the EM in Hidden Markov Models. In this section, we will firstly simulate the data for both discrete and continuous cases, to see how the EM Algorithm and decoding are performed. We will then apply it to a real-world scenarios such as the volatility of NVIDIA stock.
+In this section, we present two real-world examples to evaluate the practical performance of Hidden Markov Models (HMMs): the Toronto bicycle thefts and NVIDIA stock prices. These two examples will show how to implement different types of emission distribution such as Poisson for Bicycle Thefts and Normal for volatility of stock, and compare their performances. When perform EM algorithm to estimate the parameters, although it is possible to implement the recursive algorithms for parameter estimation manually in R, we make use of existing R packages such as `HiddenMarkov` [@hiddenmarkov] to effectively perform the EM Algorithms in Hidden Markov Models.
 
 ## Toronto Bicycle Thefts
+
+The data on Toronto bicycle thefts is obtained from the `opendatatoronto` package [@opendatatoronto]. It contains the records of bicycle thefts from January 2014 to December 2024. We aggregate this data to obtain the monthly counts of bicycle thefts over this eleven-year period, resulting in a total of 132 observations. The goal of this study is to see whether we can see the seasonal patterns using the HMMs. We will assume that the number of bicycle thefts per month follows a Poisson distribution with varying rate parameters. To model this time series, we fit Hidden Markov Models (HMMs) with different numbers of hidden states and select the optimal model based on the Akaike Information Criterion (AIC) and the Bayesian Information Criterion (BIC).
 
 ```{r, echo=FALSE}
 n <- nrow(bicycle_data)
 x <- bicycle_data$count
 ```
 
-
 ```{r, include=FALSE}
-# Use EM
+# Use EM to estimate the parameters
 library(HiddenMarkov)
-
 ################################################################################
 # # # Number of states
 # nstates <- 2
@@ -447,18 +424,16 @@ summary(fitted_model_bicycle)
 library(knitr)
 
 # Raw model values
+# They are not randomly generated. I run the previous codes for many times, 
+# and store them locally.
 states <- 2:6
 aic <- c(4196.517, 2685.328, 2172.677, 1993.804, 1753.180)
 bic <- c(4210.931, 2717.039, 2227.450, 2077.405, 1871.375)
 iterations <- c(7, 9, 15, 36, 30)
 
-# Compute number of parameters: k = m^2 + m - 1
 num_params <- states^2 + states - 1
-
-# Compute log-likelihood: logLik = -0.5 * (AIC - 2k)
 loglik <- -0.5 * (aic - 2 * num_params)
 
-# Create summary data frame
 model_table <- data.frame(
   States = states,
   AIC = round(aic, 3),
@@ -467,15 +442,26 @@ model_table <- data.frame(
   Parameters = num_params,
   Iterations = iterations)
 
-# Print kable table
 kable(model_table, caption = "Poisson HMM Model Comparison (Non-Stationary)")
 ```
 
-```{r, echo = FALSE, fig.width = 8, fig.height = 5, fig.cap = "Local decoding (top) and glocal decoding (bottom) for the number of monthly bicycle thefts at Toronto since 2014 (3 hidden states)"}
+Table 1 compares different HMMs under different criterias. We can see that even though the values of AIC and BIC continuously to decrease as the number of states increases, the number parameters and the number of iterations needed to reach convergence increases significantly. In addition, it seems that the decrease of adding one more hidden state after 4 is not as much as from 3 to 4 and the number of parameters and number of iterations under 4 hidden states are moderatre. Therefore we may conclude that the 4 hidden states are adequate for the HMMs. After fitting four-state poisson-HMM using EM Algorithm, the estimated initial distribution is $\hat{\boldsymbol\delta}=(1,0,0,0)$, meaning that the chain starts at state 1. In addition, the estimated transition matrix
+$$
+\begin{pmatrix}
+0.76 & 0.218 & 0.022 & 0.000 \\
+0.407 & 0.148 & 0.446 & 0.000 \\
+0.028 & 0.308 & 0.411 & 0.252 \\
+0.000 & 0.000 & 0.362 & 0.638 \\
+\end{pmatrix}
+$$
+This indicates that, given the system is currently in State 1, there is a 0.76 probability of remaining in the same state at time $t+1$. Additionally, there is a 0.218 probability of transitioning to State 2. The remaining transition probabilities can be interpreted in a similar way. Moreover, the estimated emission distribution parameters are $(104, 231, 385, 549)$ with rounded to the nearest integer. 
+
+```{r, echo = FALSE, fig.width = 8, fig.height = 5, fig.cap = "*Local decoding (top) and glocal decoding (bottom) for the number of monthly bicycle thefts at Toronto since 2014 January (4 hidden states)*"}
 mod_new <- convert.HiddenMarkov.output(fitted_model_bicycle, x = x)
 state_probs <- pois.HMM.state_probs(x, mod_new)
 
 par(mfrow = c(2, 1), mar = c(1.9, 4, 1.9, 2))
+# par(mfrow = c(2, 1), mar = c(3.8, 4, 1.9, 2))
 ################################################################################
 # 1. Local decoding
 local_decoding <- pois.HMM.local_decoding(x, mod_new)
@@ -511,8 +497,12 @@ points(c(1:n), decoded_means, pch = 19, cex = 0.4)
 abline(h = mod_new$lambda, col = "grey", lty = 2)
 ```
 
-```{r, echo=FALSE, fig.cap = "Forecasted distribution of monthly bicycle theft counts in Toronto for the next nine months"}
-xf <- 0:500  # finer grid
+After estimating all model parameters, we apply the local and global decoding methods introduced in Section 5 to identify the hidden states over time. Figure 3 presents the local (top) and global (bottom) decoding results. The three dashed lines represent the estimated values of lambdas for each hidden states, while the black dots indicate the decoded state at each time point. Both decoding methods perform exceptionally well, which we can observe a clear separation between hidden states that closely aligns with the observed time series. Moreover, the decoded states appear to capture meaningful seasonal trends. For example, lower rates of bicycle thefts are observed during the winter months as people may not ride bicycles. This can be seen in the first few observations (January to April 2014), which are mostly assigned to the lowest-rate state. In contrast, higher theft rates are observed during the summer months (e.g., time 5 to 10), which also makes sense as people may increase bicycle usage during warmer weather. Furthermore, the estimated hidden state sequences from local and global decoding are exactly identical. This suggests that the posterior probabilities at each time point are highly concentrated on a single state, possibly due to a strong seasonal pattern in the data. The agreement between the two decoding approaches implies that the most probable path and the most probable individual states coincide.
+
+In addition to local and global decoding, we can also forecast the distribution of future observations. Figure 4 presents the forecast densities for the number of bicycle thefts over the next nine months. In each panel, the blue-shaded area represents the forecast density, while the black line denotes the density of the limiting (stationary) distribution. Each forecast exhibits a clear tri-modal structure, reflecting the underlying three hidden states in the fitted model. This suggests that the number of bicycle thefts at each future time point is drawn from a mixture of three Poisson distributions, each corresponding to a different hidden state. The presence of multiple modes in the forecast densities indicates that the system can evolve into several plausible future regimes, each associated with a distinct distribution of $X_t$. Nevertheless, the dominant mode near 100 has the highest density, suggesting that a monthly count around 100 is the most likely outcome. This is reasonable as Toronto experiences long winters, leading to fewer thefts during much of the year.
+
+```{r, echo=FALSE, fig.cap = "*Forecasted distribution of monthly bicycle theft counts in Toronto for the next nine months*"}
+xf <- 0:500
 
 m <- nstates
 lambda <- mod_new$lambda
@@ -539,10 +529,7 @@ for (i in 1:h) {
        ylab = "",
        lwd = 1,
        col = "lightblue")
-  lines(xf, dstat, col = "black", lwd = 1)
-  
-  # Optional: vertical line for reference (e.g., last observed value)
-  # abline(v = tail(x, 1), col = "red", lty = 2)
+  lines(xf, dstat, col = "black", lwd = 0.5)
 }
 ```
 
@@ -588,15 +575,9 @@ states_prediction <- pois.HMM.state_prediction(h = 6, x, mod_new)
 library(knitr)
 library(dplyr)
 
-# Assume `results` and `states_prediction` are already defined in your environment
-
 # Format mean + CI
 summary_col <- with(results, sprintf("%.2f (%.2f, %.2f)", mean, lower_95, upper_95))
-
-# Transpose state prediction matrix for day-wise alignment
 state_probs <- t(states_prediction)
-
-# Format state probability row: "S1: 0.76, S2: 0.67, ..."
 state_col <- apply(state_probs, 1, function(p) {
   paste0("S", 1:4, ": ", sprintf("%.2f", p), collapse = ", ")
 })
@@ -608,25 +589,24 @@ summary_table <- data.frame(
   State_Probabilities = state_col
 )
 
-# Output with kable
-kable(summary_table, caption = "5-Day Forecast Summary with State Probabilities")
+summary_table %>% 
+  rename(`State Probabilities` = State_Probabilities) %>% 
+  kable(caption = "*5 Steps Ahead Forecast Summary with State Probabilities for Toronto Bicycle Thefts*")
 ```
+Lastly, Table 2 presents the five-step-ahead forecasts for the number of bicycle thefts along with the predicted probabilities of the hidden states. Since the available data ends in December 2024, we expect the number of bicycle thefts to gradually increase in the subsequent months, which we can observe this pattern from the forecasted values. Moreover, as previously discussed, the four hidden states likely correspond to the four seasons. Therefore, it is reasonable to see the decrease in the probability of State 1 (winter). The concurrent increase in the probabilities of the other states align with seasonal transitions and provide further support for this interpretation. Overall, the HMMs in Toronto bicycle thefts perform excellently.
 
 ## NVIDIA stock price
 
-The previous simulation example illustrate that the perform well. To further illustrate its performance, let us apply it to the NVIDIA stock price. The data used here is through the R package `quantmod` to access the NVIDIA stock price from January 2nd, 2024 to April 8th, 2025. The goal of this study is to use HMM to estimate the volatility level behind each price and assumed hidden. The volatility level here is calculated by absolute log returns. We divide the volatility levels into three states: low, medium and high, and the emission distribution of volatility is assumed to follow a normal distribution.
+The previous analysis of bicycle thefts demonstrated that Hidden Markov Models (HMMs) perform well when the emission distribution is Poisson. To further evaluate the effectiveness of HMMs, we now apply them to model NVIDIA stock prices. The data are obtained using the R package `quantmod` [@quantmod] to access the NVIDIA stock price from January 2nd, 2024 to April 11st, 2025. The objective of this analysis is to use an HMM to estimate the latent volatility states underlying the observed price movements and we will quantify the volatility using the absolute log returns of the stock price. We will assume the emission distribution is normal; that is, the distribution of absolute log return given the volatility state follows normal distribution. As usual, we begin by fitting HMMs with different numbers of hidden states and selecting the best model based on information criteria such as AIC and BIC.
 
 ```{r, echo = FALSE}
 x <- na.omit(abs(diff(log(nvda_vec))))
-# x <- na.omit(diff(nvda_vec))
 n <- length(x)
 ```
 
-Descriptions here.
 ```{r, include = FALSE}
-
+# Use EM to estimate the parameters
 library(HiddenMarkov)
-
 ################################################################################
 # Number of states
 nstates <- 2
@@ -685,6 +665,8 @@ summary(fitted_model_gaussian)
 library(knitr)
 
 # Input data
+# They are not randomly generated. I run the previous codes for many times, 
+# and store them locally.
 states <- 2:4
 aic <- c(-1583.11, -1616.91, -1622.727)
 bic <- c(-1556.797, -1564.285, -1536.272)
@@ -706,14 +688,11 @@ gaussian_table <- data.frame(
   Iterations = iterations)
 
 # Display table
-kable(gaussian_table, caption = "Gaussian HMM Model Comparison (Non-Stationary)")
+kable(gaussian_table, caption = "*Gaussian HMM Model Comparison (Non-Stationary)*")
 
 ```
 
-
-The above table shows the model diagonistics for different states, we can see that the two states is enough.
-
-By performing the EM Algorithm with two states, the estimated initial distribution $\boldsymbol\delta=(1, 0)$, and the estimated transition matrix is
+Table 3 compares HMMs with hidden states two to four. We can see that the AIC and BIC do not decreases significantly as the number of hidden states increases. However, as hidden states increases, the number of parameters needs to be estimated and number of iterations untill convergence increases dramatically. Therefore, it seems that the two-state Gaussian-HMM is adequate for this data. By performing the EM Algorithm with two states, the estimated initial distribution $\hat{\boldsymbol\delta}=(1, 0)$, indicating the Markov Chain starts at state 1. The estimated transition matrix is
 $$
 \hat{\boldsymbol\Gamma} =
 \begin{pmatrix}
@@ -721,10 +700,9 @@ $$
 0.738 & 0.262\\
 \end{pmatrix}
 $$
+The estimated transition matrix shows that, given we are at the state 1, there is a 0.84 probability of remaining at state 1 at $t+1$ and 0.16 probable to move to the second state.In contrast, given we are at state 2, the probability of stay at the same state is only 0.262, while there are 0.738 probability to move to state 1. In addition, the estimated parameters of the emission distribution are $\mu_1=0.019,\sigma_1=0.013$ and $\mu_2=0.059,\sigma_2=0.033$, respectively.
 
-The estimated parameters are $\mu_1=0.019,\sigma_1=0.013$ and $\mu_2=0.059,\sigma_2=0.033$.
-
-```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.cap = "Local decoding (top) and glocal decoding (bottom) for the volatility of NVIDIA stock (the most recent 150 observations due to visualbility) (3 hidden states)", fig.width = 8, fig.height = 5}
+```{r, echo = FALSE, warning = FALSE, message = FALSE, fig.cap = "*Local decoding (top) and glocal decoding (bottom) for the volatility of daily NVIDIA stock (the most recent 150 observations due to visualbility) (2 hidden states)*", fig.width = 8, fig.height = 5}
 mod_new <- convert.HiddenMarkov.output(fitted_model_gaussian, x = x)
 state_probs <- normal.HMM.state_probs(x, mod_new)
 
@@ -732,42 +710,35 @@ par(mfrow = c(2, 1), mar = c(1.9, 4, 1.9, 2))
 ################################################################################
 # 1. Local Decoding
 local_decoding <- normal.HMM.local_decoding(x, mod_new)
-
-# Map decoded states to estimated Poisson means (lambda)
 decoded_means <- mod_new$mean[local_decoding]
 
-# Plot observed data (Poisson counts)
-plot(1:150, tail(x, 150),
+plot(1:n, x,
      type = "l", col = "grey40", lwd = 0.6,
      ylab = "", xlab = "", main = "Local Decoding")
 
-# Overlay the expected lambda values per decoded state
-points(1:150, tail(decoded_means, 150), pch = 19, cex = 0.3)
-
-# Optionally, add horizontal reference lines
+points(1:n, decoded_means, pch = 19, cex = 0.25)
 abline(h = mod_new$mean, col = "black", lty = 2, lwd = 0.5)
 ################################################################################
 # 2. Global Decoding
 global_decoding <- normal.HMM.viterbi(x, mod_new)
 
-# Map decoded states to estimated Poisson means (lambda)
 decoded_means <- mod_new$mean[global_decoding]
 
-# Plot observed data (Poisson counts)
-plot(1:150, tail(x, 150),
+plot(1:n, x,
      type = "l", col = "grey40", lwd = 0.6,
      ylab = "", xlab = "Time", main = "Global Decoding")
 
-# Overlay the expected lambda values per decoded state
-points(1:150, tail(decoded_means, 150), pch = 19, cex = 0.3)
-
-# Optionally, add horizontal reference lines
+points(1:n, decoded_means, pch = 19, cex = 0.25)
 abline(h = mod_new$mean, col = "black", lty = 2, lwd = 0.5)
 ```
 
-Figure 5 shows the estimated hidden states for each time point on NVIDIA stock prices. We can see that the estimates are reasonable, which almost correctly identify the points with high, medium and low volatilities.
+Using the estimated parameters, we perform both local and global decoding to estimate the hidden states. Figure 5 presents the estimated hidden states over time for the absolute log returns of NVIDIA stock prices, with local decoding results shown at the top and global decoding at the bottom. As in the previous example, the two dashed lines represent the estimated mean volatilities for each hidden state, while the black dots indicate the estimated hidden state at each time point. Both decoding approaches yield reasonable results, which they all successfully identifying periods of high volatility corresponding to sharp spikes in the data. Unlike the bicycle theft example, however, the state sequences derived from local and global decoding has slight differences. This discrepancy reflects the ambiguity in state assignments for continuous data with overlapping distributions, where local and global approaches may yield different solutions.
 
-```{r, echo=FALSE, fig.cap = "Forecasted distribution of daily volatility (by absolute log returns) of NVIDIA stock for the next nine days"}
+Figure 6 presents the forecast densities for the future absolute log returns over the next nine time points. As before, the blue-shaded regions represent the predictive densities, while the black curves denote the stationary distribution. In contrast to the bicycle theft example where convergence to the limiting distribution occurred gradually, the forecast densities for the absolute log returns match the stationary distribution almost immediately, with only minor deviations at $X_{t+1}$. One potential reason for this rapid convergence is the structure of the estimated transition matrix, where each row is dominated by a single large probability. This structure makes transitions between states infrequent, particularly from State 1 to State 2, and keeping the process in the same state for longer durations. This behavior is also reflected in Figure 5, where the estimated high-volatility state appears much less frequently than the low-volatility state.
+
+Another possible reason is that the Markov chain may have already reached its stationary distribution by the end of the observed data. This would result in the hidden state predictions for future time points remaining nearly constant. We can verify this conclusion again from Table 4, which displays the predicted state probabilities over the next five days and they are nearly identical. This suggests the markov chain is already reached the steady state. In fact, we can compute the stationary distribution by calculating the eigenvector of the estimated transition matrix, which is $\boldsymbol\delta^\star=(0.823, 0.177)$. This result closely alignes with Table 4. 
+
+```{r, echo=FALSE, fig.cap = "*Forecasted distribution of daily volatility (by absolute log returns) of NVIDIA stock for the next nine days*"}
 xf <- seq(0, 0.2, length.out = 1000)   # finer grid
 
 m <- nstates
@@ -792,15 +763,15 @@ for (i in 1:h) {
        type = "n",
        main = bquote("Forecast density for " ~ X[T+.(i)]),
        xlim = c(0, 0.2),
-       ylim = c(0, max(fc) * 1.05),  # auto-scaled per panel
+       ylim = c(0, max(fc) * 1.05),
        xlab = expression(x),
        ylab = "Density",
        lwd = 1,
        col = "lightblue")
-  polygon(c(xf, rev(xf)),               # x-coordinates (forward + reverse)
-          c(fc, rep(0, length(fc))),    # y-coordinates (top + 0 base)
+  polygon(c(xf, rev(xf)),
+          c(fc, rep(0, length(fc))),
           col = "lightblue", border = NA)
-  lines(xf, dstat, col = "black", lwd = 1)
+  lines(xf, dstat, col = "black", lwd = 0.5)
 }
 ```
 
@@ -810,8 +781,8 @@ h <- 6
 xf <- seq(0, 0.2, length.out = 1000)  # finer grid
 forecasts <- normal.HMM.forecast(xf, h, x, mod_new)
 # Setup
-dx <- diff(xf)[1]  # grid spacing
-H <- h             # total forecast steps
+dx <- diff(xf)[1]
+H <- h           
 results <- data.frame(
   step = 1:H,
   mean = NA,
@@ -819,23 +790,17 @@ results <- data.frame(
   upper_95 = NA
 )
 
-# Loop over all forecast steps
 for (i in 1:H) {
   fc <- forecasts[i, ]
-  fc <- fc / sum(fc * dx)  # normalize
+  fc <- fc / sum(fc * dx)
   
-  # Mean
   mu <- sum(xf * fc * dx)
   
-  # CDF and quantile function
   cdf <- cumsum(fc * dx)
   qfun <- approxfun(cdf, xf)
-  
-  # 95% confidence interval
   lwr <- qfun(0.025)
   upr <- qfun(0.975)
   
-  # Store results
   results$mean[i] <- mu
   results$lower_95[i] <- lwr
   results$upper_95[i] <- upr
@@ -844,67 +809,656 @@ states_prediction <- normal.HMM.state_prediction(h = 6, x, mod_new)
 library(knitr)
 library(dplyr)
 
-# Assume `results` and `states_prediction` are already defined in your environment
 
 # Format mean + CI
 summary_col <- with(results, sprintf("%.2f (%.2f, %.2f)", mean, lower_95, upper_95))
 
-# Transpose state prediction matrix for day-wise alignment
 state_probs <- t(states_prediction)
-
-# Format state probability row: "S1: 0.76, S2: 0.67, ..."
 state_col <- apply(state_probs, 1, function(p) {
   paste0("S", 1:2, ": ", sprintf("%.2f", p), collapse = ", ")
 })
 
-# Combine into final summary table
 summary_table <- data.frame(
   Day = 1:nrow(results),
   Forecast = summary_col,
   State_Probabilities = state_col
 )
 
-# Output with kable
-kable(summary_table, caption = "5-Day Forecast Summary with State Probabilities")
-```
-
-
-# HMM_GARCH
-
-```{r, echo=FALSE}
-# library(MSGARCH)
-# library(MSGARCH)
-# 
-# # Specify two regimes (each regime gets its own spec)
-# spec <- CreateSpec(
-#   variance.spec = list(model = c("sGARCH", "sGARCH")),
-#   distribution.spec = list(distribution = c("norm", "norm")),
-#   switch.spec = list(do.mix = FALSE)  # FALSE means HMM-style regime switching
-# )
-# 
-# # Example data (replace with your own)
-# x <- na.omit(abs(diff(log(nvda_vec))))  # or just diff(log(nvda_vec)) for returns
-# 
-# # Fit the model
-# fit <- FitML(spec, data = x)
-# 
-# # View the result
-# summary(fit)
-# plot(fit)
-# 
-
+summary_table %>% 
+  rename(`State Probabilities` = State_Probabilities) %>% 
+  kable(caption = "*5 Steps Ahead Forecast Summary with State Probabilities for Volatility of NVIDIA Stock Price*")
 ```
 
 # Discussion
 
-I will finish this part in the final version.
+The hidden Markov Model is a very powerful stochastic model and has wide applications in fields such as Time Series, Finance, speech recognition, and bioinformatics. It shows us a unique dependence structure between the observed and hidden states by the two Markov properties. This paper summarizes the basic concepts of Hidden Markov Models such as the Forward-Backward Algorithm, Baum-Welch Algorithm, Viterbi Algorithm, etc. In addition, it further applies HMMs to two practical examples to demonstrate its performance. 
 
+Overall, HMMs have excellent performance in predicting the hidden states behind the observed data, especially for the example of Toronto Bicycle Thefts, where the predicted hidden states correspond to four seasons in a year. In addition, its predictions on the observed and hidden states also make sense when combined with common sense. For example, the predictions of the number of bicycle thefts in the next six months, shown in Table 2, tell us the number of thefts may increase in the summertime. However, even though the predictions in either observed variable or hidden state on NVIDIA stock volatility on future days are less informative, HMMs successfully classify the high and low volatility levels from the previous day, as shown in Figure 5, where each peak has a prediction of high volatility level. Its bad performance on prediction is related to the data structure, where the stock stays at low volatility most of the time. This example also does not imply the low efficiency of HMMs in continuous emission distribution.
+
+However, it is true that the HMMs still have limitations. The first one is that, just like other convergence problems, the parameter estimated from the EM Algorithm does not guarantee to reach the global maximum [@bickel2015mathematical]. This means that the final estimates may depend heavily on the choice of initial parameter values and may converge to local optima, particularly in models with complex structures or multiple hidden states. Besides, the choice of the initial parameter values may also affect the convergence speed. To solve this problem, a practical way is to run the HMMs multiple times with different initial values and compare the criteria like AIC and BIC to choose the optimal one. On the other hand, the number of parameters will also increase dramatically as the number of hidden states we proposed increases. For example, the number of transition probabilities increases $2m-1$ every time we increase one hidden state. This will also make the estimation of parameters more complicated and has a low convergence rate.
+
+Another important limitation is the assumption of time homogeneity, which states that the transition probabilities between hidden states remain constant over time. While this assumption simplifies the modeling process, it may not hold in dynamic real-world contexts. For example, transitions between volatility regimes in financial markets may evolve over time due to external influences such as economic policy, political events, or macroeconomic shocks. In such cases, more flexible models such as Hidden Semi-Markov Models (HSMMs), which explicitly model the duration that the system stays in each hidden state using a user-specified or learned duration distribution [@zucchini]. Alternatively, models that incorporate GARCH dynamics into the HMM framework, referred to as HMM-GARCH, can also be applied to financial time series to better capture changing volatility patterns [@cai].
+
+In conclusion, Hidden Markov Models are powerful tools for time series analysis, which provide us valuable insights into the underlying structure of sequential data through the estimation and prediction of latent states. While HMMs perform well in many applications, their practical use in real-world settings may require more advanced or hybrid models.
 
 \newpage
 
 
 # Appendix
-I will show all the necessary proofs and coding on the final version.
+
+## Forward probabilities $\alpha_t(j)$
+
+WTS: $\alpha_t(j)=\operatorname{Pr}\left(\mathbf{X}^{(t)}=\mathbf{x}^{(t)}, Z_t=j\right)$
+
+***proof***: Based on the factorization of $\boldsymbol\alpha_t$, we know that 
+$$
+\alpha_1(j)=\delta_j p_j\left(x_1\right)=\operatorname{Pr}\left(Z_1=j\right) \operatorname{Pr}\left(X_1=x_1 \mid Z_1=j\right)
+$$
+Prove by induction. Assume that $\alpha_1(j)=\operatorname{Pr}\left(X_1=x_1, Z_1=j\right)$ is true at time $t$. At $t+1$, we have
+$$
+\begin{aligned}
+\alpha_{t+1}(j)= & \sum_{i=1}^m \alpha_t(i) \gamma_{i j} p_j\left(x_{t+1}\right)\\
+= & \sum_i \operatorname{Pr}\left(\mathbf{X}^{(t)}=\mathbf{x}^{(t)}, Z_t=i\right) \operatorname{Pr}\left(Z_{t+1}=j \mid Z_t=i\right) \times \operatorname{Pr}\left(X_{t+1}=x_{t+1} \mid Z_{t+1}=j\right) \\
+= & \sum_i \operatorname{Pr}\left(\mathbf{X}^{(t+1)}=\mathbf{x}^{(t+1)}, Z_t=i, Z_{t+1}=j\right)\quad\text{by structure of the model}\\
+= & \operatorname{Pr}\left(\mathbf{X}^{(t+1)}=\mathbf{x}^{(t+1)}, Z_{t+1}=j\right),
+\end{aligned}
+$$
+$\hfill \blacksquare$
+
+## Product of Forward and Backward probabilities
+
+We can write $\alpha_t(i) \beta_t(i)$ as
+$$
+\begin{aligned}
+\alpha_t(i) \beta_t(i) & =\operatorname{Pr}\left(\mathbf{X}_1^t, Z_t=i\right) \operatorname{Pr}\left(\mathbf{X}_{t+1}^T \mid Z_t=i\right) \\
+& =\operatorname{Pr}\left(Z_t=i\right) \operatorname{Pr}\left(\mathbf{X}_1^t \mid Z_t=i\right) \operatorname{Pr}\left(\mathbf{X}_{t+1}^T \mid Z_t=i\right)
+\end{aligned}
+$$
+since $\mathbf{X}_1^t$ and $\mathbf{X}_{t+1}^T$ are conditionally independent given $Z_t$, therefore
+$$
+\alpha_t(i) \beta_t(i)=\operatorname{Pr}\left(Z_t=i\right) \operatorname{Pr}\left(\mathbf{X}_1^t, \mathbf{X}_{t+1}^T \mid Z_t=i\right)=\operatorname{Pr}\left(\mathbf{X}^{(T)}, Z_t=i\right)
+$$
+$\hfill \blacksquare$
+
+## Conditional distribution of two hidden variable
+
+We firstly have 
+$$
+\operatorname{Pr}\left(Z_{t-1}=j, Z_t=k \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right)=\operatorname{Pr}\left(\mathbf{X}^{(T)}, Z_{t-1}=j, Z_t=k\right) / L_T
+$$
+By the dependence structure of HMM, we know that it can be further expressed as 
+$$
+\operatorname{Pr}\left(\mathbf{X}^{(t-1)}, Z_{t-1}=j\right) \operatorname{Pr}\left(Z_t=k \mid Z_{t-1}=j\right) \operatorname{Pr}\left(\mathbf{X}_t^T \mid Z_t=k\right) / L_T
+$$
+Hence, the conditional distribution can be written as
+$$
+\begin{aligned}
+\operatorname{Pr}\left(Z_{t-1}=j, Z_t=k \mid \mathbf{X}^{(T)}=\mathbf{x}^{(T)}\right) & =\alpha_{t-1}(j) \gamma_{j k}\left(\operatorname{Pr}\left(X_t \mid Z_t=k\right) \operatorname{Pr}\left(\mathbf{X}_{t+1}^T \mid Z_t=k\right)\right) / L_T \\
+& =\alpha_{t-1}(j) \gamma_{j k} p_k\left(x_t\right) \beta_t(k) / L_T
+\end{aligned}
+$$
+$\hfill \blacksquare$
+
+## Maximization Step in EM Algorithm
+
+\textbf{For} $\delta_j$:
+
+Objective Function:
+$$
+\sum_{j=1}^{m} \hat{u}_j(1) \log \delta_j
+$$
+such that $\sum_{j=1}^{m} \delta_j = 1$
+
+We introduce the Lagrange multiplier $\lambda$ to enforce the constraint:
+$$
+\mathcal{L} = \sum_{j=1}^{m} \hat{u}_j(1) \log \delta_j + \lambda \left(1 - \sum_{j=1}^{m} \delta_j \right)
+$$
+Take Derivative and Set to Zero:
+$$
+\frac{\partial \mathcal{L}}{\partial \delta_j} = \frac{\hat{u}_j(1)}{\delta_j} - \lambda = 0 
+\quad \Rightarrow \quad \hat{u}_j(1) = \lambda \delta_j
+$$
+Sum over $j$ to find $\lambda$:
+$$
+\sum_{j=1}^{m} \hat{u}_j(1) = \lambda \sum_{j=1}^{m} \delta_j 
+\quad \Rightarrow \quad \lambda = \sum_{j=1}^{m} \hat{u}_j(1)
+$$
+
+Since $\sum_{j=1}^{m} \hat{u}_j(1) = 1$, we get $\lambda = 1$. Thus:
+$$
+\delta_j = \hat{u}_j(1)
+$$
+
+\textbf{For} $\gamma_{jk}$:
+
+Objective Function:
+$$
+\sum_{j=1}^{m} \sum_{k=1}^{m} \left( \sum_{t=2}^{T} \hat{v}_{jk}(t) \right) \log \gamma_{jk}
+$$
+such that for each $j$, $\sum_{k=1}^{m} \gamma_{jk} = 1$
+
+We use the Lagrange multiplier $\lambda$ again to enforce the constraint:
+$$
+\mathcal{L}_j = \sum_{k=1}^{m} f_{jk} \log \gamma_{jk} + \lambda_j \left(1 - \sum_{k=1}^{m} \gamma_{jk} \right)
+$$
+where $f_{jk} = \sum_{t=2}^{T} \hat{v}_{jk}(t)$
+
+Take Derivative and Set to Zero:
+$$
+\frac{\partial \mathcal{L}_j}{\partial \gamma_{jk}} = \frac{f_{jk}}{\gamma_{jk}} - \lambda_j = 0 
+\quad \Rightarrow \quad \gamma_{jk} = \frac{f_{jk}}{\lambda_j}
+$$
+Sum over $k$ to find $\lambda_j$:
+$$
+\sum_{k=1}^{m} f_{jk} = \lambda_j \sum_{k=1}^{m} \gamma_{jk} 
+\quad \Rightarrow \quad \lambda_j = \sum_{k=1}^{m} f_{jk}
+$$
+$$
+\Rightarrow\gamma_{jk} = \frac{f_{jk}}{\sum_{k=1}^{m} f_{jk}}
+$$
+$\hfill \blacksquare$
+
+## R codes
+
+Below are the codes for the HMM for poisson and gaussian emission distribution. If you want to see how I implement it with the real-world examples, please check my GitHub page ( \href{https://github.com/yiliuc/psm_multi-treatments/tree/main/simulation}{here}).
+
+### Codes for poisson emission distribution
+
+The codes for poisson emission distribution is based on the book from Zucchini et al. [@zucchini].
+
+Transfer the natural parameter to working parameter.
+```{r}
+pois.HMM.pn2pw <- function(m, lambda, gamma, delta = NULL, stationary = TRUE) {
+  tlambda <- log(lambda)
+  if (m == 1) return(tlambda)
+  
+  foo <- log(gamma / diag(gamma))
+  tgamma <- as.vector(foo[!diag(m)])
+  
+  if (stationary) {
+    tdelta <- NULL
+  } else {
+    tdelta <- log(delta[-1] / delta[1])
+  }
+  
+  parvect <- c(tlambda, tgamma, tdelta)
+  return(parvect)
+}
+```
+
+Transfer working parameter back to natural parameter.
+```{r}
+pois.HMM.pw2pn <- function(m, parvect, stationary = TRUE) {
+  lambda <- exp(parvect[1:m])
+  gamma <- diag(m)
+  
+  if (m == 1) {
+    return(list(lambda = lambda, gamma = gamma, delta = 1))
+  }
+  
+  gamma[!gamma] <- exp(parvect[(m + 1):(m * m)])
+  gamma <- gamma / apply(gamma, 1, sum)
+  
+  if (stationary) {
+    delta <- solve(t(diag(m) - gamma + 1), rep(1, m))
+  } else {
+    foo <- c(1, exp(parvect[(m * m + 1):(m * m + m - 1)]))
+    delta <- foo / sum(foo)
+  }
+  
+  return(list(lambda = lambda, gamma = gamma, delta = delta))
+}
+```
+
+Compute the negative log-likelihood
+```{r}
+pois.HMM.mllk <- function(parvect, x, m, stationary = TRUE, ...) {
+  if (m == 1) return(-sum(dpois(x, exp(parvect), log = TRUE)))
+  
+  n <- length(x)
+  pn <- pois.HMM.pw2pn(m, parvect, stationary = stationary)
+  
+  foo <- pn$delta * dpois(x[1], pn$lambda)
+  sumfoo <- sum(foo)
+  lscale <- log(sumfoo)
+  foo <- foo / sumfoo
+  
+  for (i in 2:n) {
+    if (!is.na(x[i])) {
+      P <- dpois(x[i], pn$lambda)
+    } else {
+      P <- rep(1, m)
+    }
+    
+    foo <- foo %*% pn$gamma * P
+    sumfoo <- sum(foo)
+    lscale <- lscale + log(sumfoo)
+    foo <- foo / sumfoo
+  }
+  
+  mllk <- -lscale
+  return(mllk)
+}
+```
+
+Direct MLE for Poisson
+```{r}
+pois.HMM.mle <- function(x, m, lambda0, gamma0, delta0 = NULL, stationary = TRUE, ...) {
+  parvect0 <- pois.HMM.pn2pw(m, lambda0, gamma0, delta0, stationary = stationary)
+  
+  mod <- nlm(pois.HMM.mllk, parvect0, x = x, m = m, stationary = stationary)
+  
+  pn <- pois.HMM.pw2pn(m = m, mod$estimate, stationary = stationary)
+  
+  mllk <- mod$minimum
+  np <- length(parvect0)
+  AIC <- 2 * (mllk + np)
+  n <- sum(!is.na(x))
+  BIC <- 2 * mllk + np * log(n)
+  
+  list(
+    m = m,
+    lambda = pn$lambda,
+    gamma = pn$gamma,
+    delta = pn$delta,
+    code = mod$code,
+    mllk = mllk,
+    AIC = AIC,
+    BIC = BIC
+  )
+}
+```
+
+Forward probabilities
+```{r}
+pois.HMM.lforward <- function(x, mod) {
+  n <- length(x)
+  lalpha <- matrix(NA, mod$m, n)
+  
+  foo <- mod$delta * dpois(x[1], mod$lambda)
+  sumfoo <- sum(foo)
+  lscale <- log(sumfoo)
+  foo <- foo / sumfoo
+  lalpha[, 1] <- lscale + log(foo)
+  
+  for (i in 2:n) {
+    foo <- foo %*% mod$gamma * dpois(x[i], mod$lambda)
+    sumfoo <- sum(foo)
+    lscale <- lscale + log(sumfoo)
+    foo <- foo / sumfoo
+    lalpha[, i] <- log(foo) + lscale
+  }
+  
+  return(lalpha)
+}
+```
+
+Backward probabilities
+```{r}
+pois.HMM.lbackward <- function(x, mod) {
+  n <- length(x)
+  m <- mod$m
+  lbeta <- matrix(NA, m, n)
+  
+  lbeta[, n] <- rep(0, m)
+  foo <- rep(1 / m, m)
+  lscale <- log(m)
+  
+  for (i in (n - 1):1) {
+    foo <- mod$gamma %*% (dpois(x[i + 1], mod$lambda) * foo)
+    lbeta[, i] <- log(foo) + lscale
+    sumfoo <- sum(foo)
+    foo <- foo / sumfoo
+    lscale <- lscale + log(sumfoo)
+  }
+  
+  return(lbeta)
+}
+```
+
+Estimate the state probabilities
+```{r}
+pois.HMM.state_probs <- function(x, mod) {
+  n <- length(x)
+  la <- pois.HMM.lforward(x, mod)
+  lb <- pois.HMM.lbackward(x, mod)
+  c <- max(la[, n])
+  llk <- c + log(sum(exp(la[, n] - c)))
+  stateprobs <- matrix(NA, ncol = n, nrow = mod$m)
+  for (i in 1:n) {
+    stateprobs[, i] <- exp(la[, i] + lb[, i] - llk)
+  }
+  return(stateprobs)
+}
+```
+
+Hidden states predictions
+
+```{r}
+pois.HMM.state_prediction <- function(h = 1, x, mod) {
+  n <- length(x)
+  la <- pois.HMM.lforward(x, mod)
+  c <- max(la[, n])
+  llk <- c + log(sum(exp(la[, n] - c)))
+  
+  statepreds <- matrix(NA, ncol = h, nrow = mod$m)
+  foo <- exp(la[, n] - llk)
+  
+  for (i in 1:h) {
+    foo <- foo %*% mod$gamma
+    statepreds[, i] <- foo
+  }
+  
+  return(statepreds)
+}
+```
+
+Local decoding and global decoding (Viterbi Algorithm)
+```{r}
+pois.HMM.local_decoding <- function(x, mod) {
+  n <- length(x)
+  stateprobs <- pois.HMM.state_probs(x, mod)
+  ild <- rep(NA, n)
+  for (i in 1:n) {
+    ild[i] <- which.max(stateprobs[, i])
+  }
+  ild
+}
+
+pois.HMM.viterbi <- function(x, mod) {
+  n <- length(x)
+  xi <- matrix(0, n, mod$m)
+  
+  # Initialization
+  foo <- mod$delta * dpois(x[1], mod$lambda)
+  xi[1, ] <- foo / sum(foo)
+  
+  # Forward recursion
+  for (i in 2:n) {
+    foo <- apply(xi[i - 1, ] * mod$gamma, 2, max) * dpois(x[i], mod$lambda)
+    xi[i, ] <- foo / sum(foo)
+  }
+  
+  # Backtracking
+  iv <- numeric(n)
+  iv[n] <- which.max(xi[n, ])
+  
+  for (i in (n - 1):1) {
+    iv[i] <- which.max(mod$gamma[, iv[i + 1]] * xi[i, ])
+  }
+  
+  return(iv)
+}
+```
+
+Forecasting of observed variables
+```{r}
+pois.HMM.forecast <- function(xf, h = 1, x, mod)
+{
+  n    <- length(x)
+  nxf  <- length(xf)
+  dxf  <- matrix(0, nrow = h, ncol = nxf)
+  foo  <- mod$delta * dpois(x[1], mod$lambda)
+  sumfoo <- sum(foo)
+  lscale <- log(sumfoo)
+  foo <- foo / sumfoo
+  
+  for (i in 2:n)
+  {
+    foo <- foo %*% mod$gamma * dpois(x[i], mod$lambda)
+    sumfoo <- sum(foo)
+    lscale <- lscale + log(sumfoo)
+    foo <- foo / sumfoo
+  }
+  
+  for (i in 1:h)
+  {
+    foo <- foo %*% mod$gamma
+    for (j in 1:mod$m)
+      dxf[i, ] <- dxf[i, ] + foo[j] * dpois(xf, mod$lambda[j])
+  }
+  
+  return(dxf)
+}
+```
+
+### Codes for poisson emission distribution
+
+Below are the R codes for gaussian emission distribution. These are NOT provided by Zucchini et al., and I wrote them on my own. They follow the same order to the poisson, and hence I will write them together.
+```{r}
+################################################################################
+# Gaussian HMM functions
+################################################################################
+normal.HMM.pn2pw <- function(m, mu, sigma, gamma, delta = NULL, stationary = TRUE) {
+  tmu <- mu                   # Means are unconstrained
+  tsigma <- log(sigma)        # Log-transform standard deviations
+  
+  # Transition matrix transformation (same as Poisson HMM)
+  foo <- log(gamma / diag(gamma))
+  tgamma <- as.vector(foo[!diag(m)])
+  
+  if (stationary) {
+    tdelta <- NULL
+  } else {
+    tdelta <- log(delta[-1] / delta[1])
+  }
+  
+  parvect <- c(tmu, tsigma, tgamma, tdelta)
+  return(parvect)
+}
+
+normal.HMM.pw2pn <- function(m, parvect, stationary = TRUE) {
+  mu <- parvect[1:m]
+  sigma <- exp(parvect[(m + 1):(2 * m)])
+  
+  gamma <- diag(m)
+  gamma[!gamma] <- exp(parvect[(2 * m + 1):(2 * m + m * (m - 1))])
+  gamma <- gamma / rowSums(gamma)
+  
+  if (stationary) {
+    delta <- solve(t(diag(m) - gamma + 1), rep(1, m))
+  } else if (stationary == FALSE) {
+    foo <- c(1, exp(parvect[(2 * m + m * (m - 1) + 1):(2 * m + m * (m - 1) + m - 1)]))
+    delta <- foo / sum(foo)
+  }
+  
+  return(list(mu = mu, sigma = sigma, gamma = gamma, delta = delta))
+}
+
+normal.HMM.mllk <- function(parvect, x, m, stationary = TRUE, ...) {
+  if (m == 1) return(-sum(dnorm(x, mean = parvect[1], sd = exp(parvect[2]), log = TRUE)))
+  
+  n <- length(x)
+  pn <- normal.HMM.pw2pn(m, parvect, stationary = stationary)
+  
+  # Initial probabilities
+  alpha <- pn$delta * dnorm(x[1], mean = pn$mu, sd = pn$sigma)
+  sum_alpha <- sum(alpha)
+  lscale <- log(sum_alpha)
+  alpha <- alpha / sum_alpha # Initial probability
+  
+  for (i in 2:n) {
+    if (!is.na(x[i])) {
+      P <- dnorm(x[i], mean = pn$mu, sd = pn$sigma)
+    } else {
+      P <- rep(1, m)
+    }
+    if (any(!is.finite(P))) {
+      cat("Invalid P at t =", i, "; x[i] =", x[i], "\n")}
+    
+    alpha <- alpha %*% pn$gamma * P
+    sum_alpha <- sum(alpha)
+      
+    lscale <- lscale + log(sum_alpha)
+    alpha <- alpha / sum_alpha
+  }
+  
+  neg_log_likelihood <- -lscale
+  return(neg_log_likelihood)
+}
+
+normal.HMM.mle <- function(x, m, mu0, sigma0, gamma0, delta0 = NULL, stationary = TRUE, ...) {
+  parvect0 <- normal.HMM.pn2pw(m, mu0, sigma0, gamma0, delta0, stationary = stationary)
+  mod <- nlm(normal.HMM.mllk, parvect0, x = x, m = m, stationary = stationary)
+  pn <- normal.HMM.pw2pn(m = m, parvect = mod$estimate, stationary = stationary)
+  
+  # Step 4: model diagnostics
+  mllk <- mod$minimum
+  np <- length(parvect0)
+  n <- sum(!is.na(x))
+  
+  AIC <- 2 * (mllk + np)
+  BIC <- 2 * mllk + np * log(n)
+  
+  # Step 5: return results
+  return(list(
+    m = m,
+    mu = pn$mu,
+    sigma = pn$sigma,
+    gamma = pn$gamma,
+    delta = pn$delta,
+    code = mod$code,
+    mllk = mllk,
+    AIC = AIC,
+    BIC = BIC
+  ))
+}
+
+normal.HMM.lforward <- function(x, mod) {
+  n <- length(x)
+  lalpha <- matrix(NA, mod$m, n)
+  
+  # Initial step
+  foo <- mod$delta * dnorm(x[1], mean = mod$mean, sd = mod$sd)
+  sumfoo <- sum(foo)
+  lscale <- log(sumfoo)
+  foo <- foo / sumfoo
+  lalpha[, 1] <- lscale + log(foo)
+  
+  # Forward loop
+  for (i in 2:n) {
+    foo <- foo %*% mod$gamma * dnorm(x[i], mean = mod$mean, sd = mod$sd)
+    sumfoo <- sum(foo)
+    lscale <- lscale + log(sumfoo)
+    foo <- foo / sumfoo
+    lalpha[, i] <- log(foo) + lscale
+  }
+  
+  return(lalpha)
+}
+
+normal.HMM.lbackward <- function(x, mod) {
+  n <- length(x)
+  m <- mod$m
+  lbeta <- matrix(NA, m, n)
+  
+  lbeta[, n] <- rep(0, m)
+  foo <- rep(1 / m, m)
+  lscale <- log(m)
+  
+  for (i in (n - 1):1) {
+    foo <- mod$gamma %*% (dnorm(x[i + 1], mean = mod$mean, sd = mod$sd) * foo)
+    lbeta[, i] <- log(foo) + lscale
+    sumfoo <- sum(foo)
+    foo <- foo / sumfoo
+    lscale <- lscale + log(sumfoo)
+  }
+  
+  return(lbeta)
+}
+
+normal.HMM.state_probs <- function(x, mod) {
+  n <- length(x)
+  la <- normal.HMM.lforward(x, mod)
+  lb <- normal.HMM.lbackward(x, mod)
+  c <- max(la[, n])
+  llk <- c + log(sum(exp(la[, n] - c)))
+  stateprobs <- matrix(NA, ncol = n, nrow = mod$m)
+  for (i in 1:n) {
+    stateprobs[, i] <- exp(la[, i] + lb[, i] - llk)
+  }
+  return(stateprobs)
+}
+
+# Note that state output ‘statepreds’ is a matrix even if h=1.
+normal.HMM.state_prediction <- function(h = 1, x, mod) {
+  n <- length(x)
+  la <- normal.HMM.lforward(x, mod)
+  c <- max(la[, n])
+  llk <- c + log(sum(exp(la[, n] - c)))
+  
+  statepreds <- matrix(NA, ncol = h, nrow = mod$m)
+  foo <- exp(la[, n] - llk)
+  
+  for (i in 1:h) {
+    foo <- foo %*% mod$gamma
+    statepreds[, i] <- foo
+  }
+  
+  return(statepreds)
+}
+
+normal.HMM.local_decoding <- function(x, mod) {
+  n <- length(x)
+  stateprobs <- normal.HMM.state_probs(x, mod)
+  ild <- rep(NA, n)
+  for (i in 1:n) {
+    ild[i] <- which.max(stateprobs[, i])
+  }
+  ild
+}
+
+normal.HMM.viterbi <- function(x, mod) {
+  n <- length(x)
+  xi <- matrix(0, n, mod$m)
+  
+  # Initialization (t = 1)
+  foo <- mod$delta * dnorm(x[1], mean = mod$mean, sd = mod$sd)
+  xi[1, ] <- foo / sum(foo)
+  
+  # Forward recursion (t = 2 to n)
+  for (i in 2:n) {
+    foo <- apply(xi[i - 1, ] * mod$gamma, 2, max) * dnorm(x[i], mean = mod$mean, sd = mod$sd)
+    xi[i, ] <- foo / sum(foo)
+  }
+  
+  # Backtracking
+  iv <- numeric(n)
+  iv[n] <- which.max(xi[n, ])
+  
+  for (i in (n - 1):1) {
+    iv[i] <- which.max(mod$gamma[, iv[i + 1]] * xi[i, ])
+  }
+  
+  return(iv)
+}
+
+normal.HMM.forecast <- function(xf, h = 1, x, mod) {
+  n    <- length(x)
+  nxf  <- length(xf)
+  dxf  <- matrix(0, nrow = h, ncol = nxf)
+  
+  # Initial state probabilities after first observation
+  foo <- mod$delta * dnorm(x[1], mean = mod$mean, sd = mod$sd)
+  sumfoo <- sum(foo)
+  lscale <- log(sumfoo)
+  foo <- foo / sumfoo
+  for (i in 2:n) {
+    foo <- foo %*% mod$gamma * dnorm(x[i], mean = mod$mean, sd = mod$sd)
+    sumfoo <- sum(foo)
+    lscale <- lscale + log(sumfoo)
+    foo <- foo / sumfoo
+  }
+  
+  for (i in 1:h) {
+    foo <- foo %*% mod$gamma
+    for (j in 1:mod$m) {
+      dxf[i, ] <- dxf[i, ] + foo[j] * dnorm(xf, mean = mod$mean[j], sd = mod$sd[j])
+    }
+  }
+  return(dxf)
+}
+```
 
 \newpage
 

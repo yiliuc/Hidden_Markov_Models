@@ -71,7 +71,7 @@ library(quantmod)
 NVDA_table <- getSymbols("NVDA", src = "yahoo", return.class = "xts", auto.assign = FALSE)
 
 # Filter to a specific date range
-NVDA_table <- stats::window(NVDA_table, start = as.Date("2024-01-02"), end = as.Date("2025-04-08"))
+NVDA_table <- stats::window(NVDA_table, start = as.Date("2024-01-02"), end = as.Date("2025-04-11"))
 
 # Extract the closing prices
 NVDA <- NVDA_table$NVDA.Close
@@ -85,7 +85,7 @@ nvda_ts <- ts(nvda_vec, start = c(2024, 1), frequency = length(nvda_vec))
 TSLA_table <- getSymbols("TSLA", src = "yahoo", return.class = "xts", auto.assign = FALSE)
 
 # Filter to a specific date range
-TSLA_table <- stats::window(TSLA_table, start = as.Date("2024-01-02"), end = as.Date("2025-04-08"))
+TSLA_table <- stats::window(TSLA_table, start = as.Date("2024-01-02"), end = as.Date("2025-04-11"))
 
 # Extract the closing prices
 TSLA <- TSLA_table$TSLA.Close
@@ -96,7 +96,7 @@ tesla_ts <- ts(tesla_vec, start = c(2024, 1), frequency = length(tesla_vec))
 # 3. The Toronto temperature data
 tem_2024 <- read.csv("data/2024.csv")
 tem_2024 <- tem_2024 %>% 
-  select(Date.Time, Year, Month, Day, Max.Temp...C., Min.Temp...C., 
+  dplyr::select(Date.Time, Year, Month, Day, Max.Temp...C., Min.Temp...C., 
          Mean.Temp...C., Total.Rain..mm., Total.Precip..mm., 
          Spd.of.Max.Gust..km.h.)
 
